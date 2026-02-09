@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #b7cdf8;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-border: #dbe6ff;
+  --accent: #2b6ff6;
+  --accent-soft: #e8f0ff;
 }
 
 @theme inline {
@@ -12,15 +16,20 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: radial-gradient(
+      circle at top,
+      #e9f1ff 0%,
+      #c5d7ff 38%,
+      #b7cdf8 100%
+    )
+    fixed;
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply box-border;
+  }
 }
