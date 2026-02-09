@@ -1,0 +1,87 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum PqrsEstado {
+  abierto
+  en_proceso
+  cerrado
+}
+
+model Sede {
+  id        String   @id @default(cuid())
+  nombre    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  plantas Planta[]
+  pqrs    Pqrs[]
+}
+
+model Planta {
+  id        String   @id @default(cuid())
+  nombre    String   @unique
+  sedeId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sede Sede? @relation(fields: [sedeId], references: [id])
+  pqrs Pqrs[]
+
+  @@index([sedeId])
+}
+
+model TipoReclamo {
+  id        String   @id @default(cuid())
+  nombre    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pqrs Pqrs[]
+}
+
+model Pqrs {
+  id                  String      @id @default(uuid())
+  caseNumber          String      @unique
+  sedeId              String
+  plantaId            String
+  tipoReclamoId       String
+  fechaReciboProducto DateTime
+  nombre              String
+  numeroContacto      String
+  correo              String
+  descripcion         String
+  estado              PqrsEstado  @default(abierto)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  sede        Sede        @relation(fields: [sedeId], references: [id])
+  planta      Planta      @relation(fields: [plantaId], references: [id])
+  tipoReclamo TipoReclamo @relation(fields: [tipoReclamoId], references: [id])
+  evidencias  PqrsEvidencia[]
+
+  @@index([sedeId])
+  @@index([plantaId])
+  @@index([tipoReclamoId])
+  @@index([estado])
+  @@index([createdAt])
+}
+
+model PqrsEvidencia {
+  id        String   @id @default(uuid())
+  pqrsId    String
+  url       String
+  key       String
+  mimeType  String
+  size      Int
+  createdAt DateTime @default(now())
+
+  pqrs Pqrs @relation(fields: [pqrsId], references: [id], onDelete: Cascade)
+
+  @@index([pqrsId])
+}
