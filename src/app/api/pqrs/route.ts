@@ -197,8 +197,12 @@ export async function GET(request: Request) {
   const where: Prisma.PqrsWhereInput = {
     sedeId: filter.data.sedeId,
     plantaId: filter.data.plantaId,
-    estado: filter.data.estado,
   };
+  if (filter.data.estado) {
+    where.estado = filter.data.estado;
+  } else {
+    where.estado = { in: ["abierto", "en_proceso"] };
+  }
 
   const items = await prisma.pqrs.findMany({
     where,

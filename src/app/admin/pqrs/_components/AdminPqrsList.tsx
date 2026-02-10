@@ -157,7 +157,7 @@ export default function AdminPqrsList({ initialFilters }: Props) {
             }
             className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm"
           >
-            <option value="">Todos</option>
+            <option value="">Pendientes</option>
             <option value="abierto">Abierto</option>
             <option value="en_proceso">En proceso</option>
             <option value="cerrado">Cerrado</option>

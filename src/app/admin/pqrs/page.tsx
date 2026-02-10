@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import LogoutButton from "@/components/LogoutButton";
 import AdminPqrsList from "./_components/AdminPqrsList";
@@ -39,9 +38,9 @@ export default async function AdminPqrsPage({
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/admin/pqrs"
-                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 shadow-sm hover:text-slate-900"
+                className="rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-semibold text-blue-700 shadow-sm hover:text-blue-900"
               >
-                Ver todos
+                Pendientes
               </Link>
               <Link
                 href="/admin/pqrs?estado=cerrado"
