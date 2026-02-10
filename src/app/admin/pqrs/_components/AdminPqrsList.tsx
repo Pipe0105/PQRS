@@ -24,19 +24,29 @@ type PqrsItem = {
   tipoReclamo: CatalogoItem;
 };
 
+type Filters = {
+  sedeId: string;
+  plantaId: string;
+  estado: string;
+};
+
+type Props = {
+  initialFilters?: Partial<Filters>;
+};
+
 const estadoLabels: Record<PqrsItem["estado"], string> = {
   abierto: "Abierto",
   en_proceso: "En proceso",
   cerrado: "Cerrado",
 };
 
-export default function AdminPqrsList() {
+export default function AdminPqrsList({ initialFilters }: Props) {
   const [catalogos, setCatalogos] = useState<CatalogosResponse | null>(null);
-  const [filters, setFilters] = useState({
-    sedeId: "",
-    plantaId: "",
-    estado: "",
-  });
+  const [filters, setFilters] = useState<Filters>(() => ({
+    sedeId: initialFilters?.sedeId ?? "",
+    plantaId: initialFilters?.plantaId ?? "",
+    estado: initialFilters?.estado ?? "",
+  }));
   const [items, setItems] = useState<PqrsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,14 +64,14 @@ export default function AdminPqrsList() {
     async function loadCatalogos() {
       try {
         const res = await fetch("/api/catalogos");
-        if (!res.ok) throw new Error("No se pudieron cargar catálogos.");
+        if (!res.ok) throw new Error("No se pudieron cargar catalogos.");
         const data = (await res.json()) as CatalogosResponse;
         if (mounted) {
           setCatalogos(data);
         }
       } catch (err) {
         if (mounted) {
-          setError(err instanceof Error ? err.message : "Error cargando catálogos");
+          setError(err instanceof Error ? err.message : "Error cargando catalogos");
         }
       }
     }
