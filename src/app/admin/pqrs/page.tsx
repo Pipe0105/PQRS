@@ -6,17 +6,18 @@ import AdminPqrsList from "./_components/AdminPqrsList";
 export default async function AdminPqrsPage({
   searchParams,
 }: {
-  searchParams?: {
+  searchParams?: Promise<{
     sedeId?: string;
     plantaId?: string;
     estado?: string;
-  };
+  }>;
 }) {
   await requireAdmin();
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const initialFilters = {
-    sedeId: searchParams?.sedeId ?? "",
-    plantaId: searchParams?.plantaId ?? "",
-    estado: searchParams?.estado ?? "",
+    sedeId: resolvedSearchParams?.sedeId ?? "",
+    plantaId: resolvedSearchParams?.plantaId ?? "",
+    estado: resolvedSearchParams?.estado ?? "",
   };
 
   return (
