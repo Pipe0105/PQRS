@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireApiAdmin } from "@/lib/api-auth";
+import { sendPqrsResponseEmail } from "@/lib/mailer";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -29,8 +30,15 @@ export async function POST(
     );
   }
 
-  const exists = await prisma.pqrs.findUnique({ where: { id }, select: { id: true } });
-  if (!exists) {
+  const pqrs = await prisma.pqrs.findUnique({
+    where: { id },
+    include: {
+      sede: true,
+      planta: true,
+      tipoReclamo: true,
+    },
+  });
+  if (!pqrs) {
     return NextResponse.json({ error: "PQRS no encontrado" }, { status: 404 });
   }
 
@@ -49,5 +57,27 @@ export async function POST(
     }),
   ]);
 
-  return NextResponse.json({ respuesta }, { status: 201 });
+  const email = await sendPqrsResponseEmail({
+    caseNumber: pqrs.caseNumber,
+    sede: pqrs.sede.nombre,
+    planta: pqrs.planta.nombre,
+    tipoReclamo: pqrs.tipoReclamo.nombre,
+    fechaReciboProducto: pqrs.fechaReciboProducto,
+    nombre: pqrs.nombre,
+    numeroContacto: pqrs.numeroContacto,
+    correo: pqrs.correo,
+    descripcion: pqrs.descripcion,
+    createdBy: admin?.username ?? null,
+    respuesta: parsed.data.mensaje,
+    estado: parsed.data.estado,
+  });
+
+  if (!email.ok) {
+    console.warn("response email failed", email.error);
+  }
+
+  return NextResponse.json(
+    { respuesta, email: email.ok ? "sent" : "failed" },
+    { status: 201 },
+  );
 }
