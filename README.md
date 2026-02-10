@@ -40,7 +40,13 @@ npm run prisma:migrate -- --name init
 npm run prisma:seed
 ```
 
-6) Levanta la app:
+6) Crea el primer administrador:
+
+```bash
+npm run admin:create -- --username admin --password "TuClaveSegura" --nombre "Administrador"
+```
+
+7) Levanta la app:
 
 ```bash
 npm run dev
@@ -51,6 +57,8 @@ npm run dev
 - Formulario público: `http://localhost:3000/pqrs`
 - Confirmación: `http://localhost:3000/pqrs/confirmacion/[caseNumber]`
 - Panel interno: `http://localhost:3000/admin/pqrs`
+- Login: `http://localhost:3000/login`
+- Recuperación: `http://localhost:3000/reset-password`
 
 ## Endpoints
 
@@ -79,4 +87,7 @@ Ver `.env.example`. Importantes:
 
 - Subidas: máximo 5 archivos, 10MB por archivo, tipos JPG/PNG/PDF.
 - El número de caso se genera con `nanoid` (formato corto, legible).
-- El código está listo para agregar autenticación en el panel interno cuando se requiera.
+- Autenticación:
+  - Solo usuarios autenticados pueden enviar PQRS.
+  - Admin puede gestionar usuarios y generar tokens de recuperación.
+  - Recuperación de contraseña usa un token generado por admin (sin email).
