@@ -8,6 +8,7 @@ import {
 } from "@/lib/validators/pqrs";
 import { Prisma } from "@prisma/client";
 import { requireApiAdmin, requireApiUser } from "@/lib/api-auth";
+import { sendPqrsNotification } from "@/lib/mailer";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
     name: string;
     mimeType: string;
     size: number;
-    buffer: Buffer;
+    buffer: Prisma.Bytes;
   }> = [];
 
   for (const file of files) {
@@ -90,7 +91,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Archivo inválido" }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = new Uint8Array(arrayBuffer) as unknown as Prisma.Bytes;
     validatedFiles.push({
       name: metaParsed.data.name,
       mimeType: metaParsed.data.mimeType,
@@ -144,7 +146,37 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No se pudo generar el número de caso" }, { status: 500 });
   }
 
-  return NextResponse.json({ id: created.id, caseNumber: created.caseNumber });
+  const [sede, planta, tipo] = await Promise.all([
+    prisma.sede.findUnique({ where: { id: created.sedeId }, select: { nombre: true } }),
+    prisma.planta.findUnique({ where: { id: created.plantaId }, select: { nombre: true } }),
+    prisma.tipoReclamo.findUnique({
+      where: { id: created.tipoReclamoId },
+      select: { nombre: true },
+    }),
+  ]);
+
+  const email = await sendPqrsNotification({
+    caseNumber: created.caseNumber,
+    sede: sede?.nombre ?? created.sedeId,
+    planta: planta?.nombre ?? created.plantaId,
+    tipoReclamo: tipo?.nombre ?? created.tipoReclamoId,
+    fechaReciboProducto: created.fechaReciboProducto,
+    nombre: created.nombre,
+    numeroContacto: created.numeroContacto,
+    correo: created.correo,
+    descripcion: created.descripcion,
+    createdBy: user?.username ?? null,
+  });
+
+  if (!email.ok) {
+    console.warn("email notification failed", email.error);
+  }
+
+  return NextResponse.json({
+    id: created.id,
+    caseNumber: created.caseNumber,
+    email: email.ok ? "sent" : "failed",
+  });
 }
 
 export async function GET(request: Request) {

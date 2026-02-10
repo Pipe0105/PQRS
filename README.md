@@ -65,6 +65,8 @@ Ver `.env.example`. Importantes:
 - `DATABASE_URL`
 - `SESSION_TTL_DAYS`
 - `RESET_TTL_MINUTES`
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
+- `SMTP_FROM`, `SMTP_TO`, `SMTP_SECURE`
 
 ## Scripts útiles
 
@@ -81,3 +83,5 @@ Ver `.env.example`. Importantes:
   - Solo usuarios autenticados pueden enviar PQRS.
   - Admin puede gestionar usuarios y generar tokens de recuperación.
   - Recuperación de contraseña usa un token generado por admin (sin email).
+- Notificación por correo:
+  - Se envía al crear una solicitud si el SMTP está configurado.
