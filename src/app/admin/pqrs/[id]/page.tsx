@@ -35,6 +35,15 @@ export default async function AdminPqrsDetailPage({
               nombre: true,
             },
           },
+          evidencias: {
+            select: {
+              id: true,
+              fileName: true,
+              mimeType: true,
+              size: true,
+              createdAt: true,
+            },
+          },
         },
       },
     },
@@ -94,7 +103,7 @@ export default async function AdminPqrsDetailPage({
             </div>
             <div>
               <dt className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                Número contacto
+                Numero contacto
               </dt>
               <dd className="text-sm font-semibold text-slate-800">{item.numeroContacto}</dd>
             </div>
@@ -104,7 +113,7 @@ export default async function AdminPqrsDetailPage({
             </div>
             <div>
               <dt className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                Fecha creación
+                Fecha creacion
               </dt>
               <dd className="text-sm font-semibold text-slate-800">
                 {new Intl.DateTimeFormat("es-CO", {
@@ -116,7 +125,7 @@ export default async function AdminPqrsDetailPage({
           </dl>
 
           <div className="mt-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Descripción</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Descripcion</p>
             <p className="mt-2 whitespace-pre-wrap rounded-2xl border border-slate-200 bg-slate-50/60 p-4 text-sm text-slate-700">
               {item.descripcion}
             </p>
@@ -183,6 +192,27 @@ export default async function AdminPqrsDetailPage({
                   <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
                     {respuesta.mensaje}
                   </p>
+                  {respuesta.evidencias.length ? (
+                    <div className="mt-3">
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
+                        Adjuntos
+                      </p>
+                      <ul className="mt-2 flex flex-col gap-2">
+                        {respuesta.evidencias.map((archivo) => (
+                          <li key={archivo.id}>
+                            <a
+                              href={`/api/pqrs/${item.id}/respuestas/${respuesta.id}/evidencias/${archivo.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm font-semibold text-blue-600 hover:text-blue-800"
+                            >
+                              {archivo.fileName}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
                 </li>
               ))}
             </ul>
@@ -201,3 +231,4 @@ export default async function AdminPqrsDetailPage({
     </div>
   );
 }
+

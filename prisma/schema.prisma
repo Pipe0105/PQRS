@@ -127,9 +127,24 @@ model PqrsRespuesta {
 
   pqrs      Pqrs @relation(fields: [pqrsId], references: [id], onDelete: Cascade)
   createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  evidencias PqrsRespuestaEvidencia[]
 
   @@index([pqrsId])
   @@index([createdById])
+}
+
+model PqrsRespuestaEvidencia {
+  id           String   @id @default(uuid())
+  respuestaId  String
+  fileName     String
+  mimeType     String
+  size         Int
+  data         Bytes
+  createdAt    DateTime @default(now())
+
+  respuesta PqrsRespuesta @relation(fields: [respuestaId], references: [id], onDelete: Cascade)
+
+  @@index([respuestaId])
 }
 
 model Session {

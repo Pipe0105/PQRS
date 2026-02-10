@@ -18,6 +18,11 @@ type MailPayload = {
 type ResponsePayload = MailPayload & {
   respuesta: string;
   estado: "abierto" | "en_proceso" | "cerrado";
+  attachments?: Array<{
+    fileName: string;
+    mimeType: string;
+    data: Buffer;
+  }>;
 };
 
 function getTransport() {
@@ -66,7 +71,7 @@ Contacto: ${payload.numeroContacto}
 Correo: ${payload.correo}
 Usuario: ${payload.createdBy ?? "No aplica"}
 
-Descripción:
+Descripcion:
 ${payload.descripcion}
 `;
 
@@ -80,7 +85,7 @@ ${payload.descripcion}
     <p><strong>Contacto:</strong> ${payload.numeroContacto}</p>
     <p><strong>Correo:</strong> ${payload.correo}</p>
     <p><strong>Usuario:</strong> ${payload.createdBy ?? "No aplica"}</p>
-    <p><strong>Descripción:</strong></p>
+    <p><strong>Descripcion:</strong></p>
     <pre style="white-space: pre-wrap; font-family: inherit;">${payload.descripcion}</pre>
   `;
 
@@ -112,7 +117,7 @@ export async function sendPqrsResponseEmail(payload: ResponsePayload) {
     payload.fechaReciboProducto,
   );
 
-  const text = `Se registró una respuesta a tu caso PQRS ${payload.caseNumber}
+  const text = `Se registro una respuesta a tu caso PQRS ${payload.caseNumber}
 Estado: ${payload.estado}
 Sede: ${payload.sede}
 Planta: ${payload.planta}
@@ -141,6 +146,11 @@ ${payload.respuesta}
       subject,
       text,
       html,
+      attachments: payload.attachments?.map((file) => ({
+        filename: file.fileName,
+        content: file.data,
+        contentType: file.mimeType,
+      })),
     });
     return { ok: true };
   } catch (error) {
@@ -148,3 +158,4 @@ ${payload.respuesta}
     return { ok: false, error: message };
   }
 }
+

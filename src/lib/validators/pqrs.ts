@@ -21,9 +21,9 @@ export const pqrsCreateSchema = z.object({
   nombre: z.string().min(1, "Nombre es obligatorio"),
   numeroContacto: z
     .string()
-    .regex(/^\d{7,15}$/, "Número de contacto inválido"),
-  correo: z.string().email("Correo inválido"),
-  descripcion: z.string().min(10, "Descripción mínima de 10 caracteres"),
+    .regex(/^\d{7,15}$/, "Numero de contacto invalido"),
+  correo: z.string().email("Correo invalido"),
+  descripcion: z.string().min(10, "Descripcion minima de 10 caracteres"),
 });
 
 export const pqrsCreateSchemaWithDateCheck = pqrsCreateSchema
@@ -32,7 +32,7 @@ export const pqrsCreateSchemaWithDateCheck = pqrsCreateSchema
     if (Number.isNaN(value.getTime())) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Fecha inválida",
+        message: "Fecha invalida",
         path: ["fechaReciboProducto"],
       });
       return;

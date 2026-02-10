@@ -1,13 +1,13 @@
 # PQRS Web App
 
-Formulario de PQRS con panel interno, autenticación y roles. Stack: Next.js (App Router) + TypeScript + Tailwind + React Hook Form + Zod + Prisma + PostgreSQL.
+Formulario de PQRS con panel interno, autenticacion y roles. Stack: Next.js (App Router) + TypeScript + Tailwind + React Hook Form + Zod + Prisma + PostgreSQL.
 
 ## Requisitos
 
 - Node.js 20+
 - PostgreSQL (local o servidor)
 
-## Configuración rápida
+## Configuracion rapida
 
 1) Copia variables de entorno:
 
@@ -44,11 +44,11 @@ npm run dev
 ## Rutas
 
 - Formulario: `http://localhost:3000/pqrs`
-- Confirmación: `http://localhost:3000/pqrs/confirmacion/[caseNumber]`
+- Confirmacion: `http://localhost:3000/pqrs/confirmacion/[caseNumber]`
 - Panel admin PQRS: `http://localhost:3000/admin/pqrs`
 - Panel admin usuarios: `http://localhost:3000/admin/usuarios`
 - Login: `http://localhost:3000/login`
-- Recuperación: `http://localhost:3000/reset-password`
+- Recuperacion: `http://localhost:3000/reset-password`
 
 ## Endpoints
 
@@ -57,7 +57,8 @@ npm run dev
 - `GET /api/pqrs` (listar para admin)
 - `GET /api/pqrs/:id` (detalle)
 - `GET /api/pqrs/:id/evidencias/:evidenciaId` (descargar archivo)
-- `POST /api/test/email` (envío de correo de prueba, requiere admin)
+- `GET /api/pqrs/:id/respuestas/:respuestaId/evidencias/:evidenciaId` (adjuntos de respuesta)
+- `POST /api/test/email` (envio de correo de prueba, requiere admin)
 
 ## Variables de entorno
 
@@ -69,7 +70,7 @@ Ver `.env.example`. Importantes:
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
 - `SMTP_FROM`, `SMTP_TO`, `SMTP_SECURE`
 
-## Scripts útiles
+## Scripts utiles
 
 - `npm run lint`
 - `npm run typecheck`
@@ -77,12 +78,14 @@ Ver `.env.example`. Importantes:
 
 ## Notas
 
-- Subidas: máximo 5 archivos, 10MB por archivo, tipos JPG/PNG/PDF.
+- Subidas: maximo 5 archivos, 10MB por archivo, tipos JPG/PNG/PDF.
 - Los archivos se almacenan en PostgreSQL (campo `bytea`).
-- El número de caso se genera con `nanoid` (formato corto, legible).
-- Autenticación:
+- El numero de caso se genera con `nanoid` (formato corto, legible).
+- autenticacion:
   - Solo usuarios autenticados pueden enviar PQRS.
-  - Admin puede gestionar usuarios y generar tokens de recuperación.
-  - Recuperación de contraseña usa un token generado por admin (sin email).
-- Notificación por correo:
-  - Se envía al crear una solicitud si el SMTP está configurado.
+  - Admin puede gestionar usuarios y generar tokens de Recuperacion.
+  - Recuperacion de contrasena usa un token generado por admin (sin email).
+- Notificacion por correo:
+  - Se envia al crear una solicitud si el SMTP está configurado.
+
+
