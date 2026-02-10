@@ -57,6 +57,7 @@ npm run dev
 - `GET /api/pqrs` (listar para admin)
 - `GET /api/pqrs/:id` (detalle)
 - `GET /api/pqrs/:id/evidencias/:evidenciaId` (descargar archivo)
+- `POST /api/test/email` (envío de correo de prueba, requiere admin)
 
 ## Variables de entorno
 
