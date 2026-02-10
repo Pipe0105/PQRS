@@ -240,6 +240,9 @@ export default function PqrsForm() {
       onSubmit={handleSubmit(onSubmit)}
       className="flex flex-col gap-6 rounded-3xl bg-white/95 p-6 shadow-xl shadow-blue-200/40"
     >
+      <div className="w-fit rounded-2xl border border-blue-100 bg-blue-50 px-4 py-2 text-xs font-semibold text-blue-700 shadow-sm">
+        * Indica que la pregunta es obligatoria
+      </div>
       {catalogosError ? (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {catalogosError}

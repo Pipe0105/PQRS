@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import LogoutButton from "@/components/LogoutButton";
-import AdminPqrsList from "./_components/AdminPqrsList";
+import AdminUsers from "./_components/AdminUsers";
 
-export default async function AdminPqrsPage() {
+export default async function AdminUsersPage() {
   await requireAdmin();
 
   return (
@@ -15,26 +15,24 @@ export default async function AdminPqrsPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-500">
                 Panel interno
               </p>
-              <h1 className="text-2xl font-semibold text-slate-900">
-                Solicitudes PQRS
-              </h1>
+              <h1 className="text-2xl font-semibold text-slate-900">Usuarios</h1>
               <p className="text-sm text-slate-600">
-                Filtra por sede, planta o estado y revisa el detalle de cada caso.
+                Administra usuarios, roles y tokens de recuperación.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Link
-                href="/admin/usuarios"
+                href="/admin/pqrs"
                 className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 shadow-sm hover:text-slate-900"
               >
-                Usuarios
+                Solicitudes
               </Link>
               <LogoutButton />
             </div>
           </div>
         </header>
 
-        <AdminPqrsList />
+        <AdminUsers />
       </div>
     </div>
   );
