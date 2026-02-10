@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import LoginForm from "./_components/LoginForm";
 import { getSessionUser } from "@/lib/auth";
 
@@ -11,6 +12,16 @@ export default async function LoginPage() {
   return (
     <div className="min-h-screen px-4 py-16">
       <div className="mx-auto flex w-full max-w-md flex-col gap-6 rounded-3xl bg-white/95 p-8 shadow-xl shadow-blue-200/40">
+        <div className="flex justify-center">
+          <Image
+            src="/logos/mercamio-mercatodo.jpeg"
+            alt="Logos Mercamio y Mercatodo"
+            width={840}
+            height={260}
+            className="h-32 w-auto"
+            priority
+          />
+        </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-500">
             Acceso
