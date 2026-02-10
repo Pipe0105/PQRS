@@ -71,6 +71,7 @@ model Pqrs {
   tipoReclamo TipoReclamo @relation(fields: [tipoReclamoId], references: [id])
   createdBy   User?       @relation("UserPqrs", fields: [createdById], references: [id], onDelete: SetNull)
   evidencias  PqrsEvidencia[]
+  respuestas  PqrsRespuesta[]
 
   @@index([sedeId])
   @@index([plantaId])
@@ -111,7 +112,23 @@ model User {
   passwordResetTokens     PasswordResetToken[]
   passwordResetCreated    PasswordResetToken[] @relation("UserPasswordResetCreatedBy")
   pqrsCreated             Pqrs[]               @relation("UserPqrs")
+  pqrsRespuestas          PqrsRespuesta[]
 
+  @@index([createdById])
+}
+
+model PqrsRespuesta {
+  id         String     @id @default(uuid())
+  pqrsId     String
+  mensaje    String
+  estado     PqrsEstado
+  createdAt  DateTime   @default(now())
+  createdById String?
+
+  pqrs      Pqrs @relation(fields: [pqrsId], references: [id], onDelete: Cascade)
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([pqrsId])
   @@index([createdById])
 }
 

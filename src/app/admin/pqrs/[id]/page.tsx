@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import AdminPqrsRespuestaForm from "./_components/AdminPqrsRespuestaForm";
 
 export default async function AdminPqrsDetailPage({
   params,
@@ -23,6 +24,17 @@ export default async function AdminPqrsDetailPage({
           mimeType: true,
           size: true,
           createdAt: true,
+        },
+      },
+      respuestas: {
+        orderBy: { createdAt: "desc" },
+        include: {
+          createdBy: {
+            select: {
+              username: true,
+              nombre: true,
+            },
+          },
         },
       },
     },
@@ -131,6 +143,52 @@ export default async function AdminPqrsDetailPage({
               <p className="mt-2 text-sm text-slate-500">Sin archivos adjuntos.</p>
             )}
           </div>
+        </section>
+
+        <section className="rounded-3xl bg-white/95 p-6 shadow-xl shadow-blue-200/40">
+          <h2 className="text-lg font-semibold text-slate-900">Respuesta y seguimiento</h2>
+          <p className="text-sm text-slate-600">
+            Agrega una respuesta y actualiza el estado para dejarlo en el historial.
+          </p>
+          <div className="mt-4">
+            <AdminPqrsRespuestaForm pqrsId={item.id} estadoActual={item.estado} />
+          </div>
+        </section>
+
+        <section className="rounded-3xl bg-white/95 p-6 shadow-xl shadow-blue-200/40">
+          <h2 className="text-lg font-semibold text-slate-900">Historial</h2>
+          {item.respuestas.length ? (
+            <ul className="mt-4 flex flex-col gap-4">
+              {item.respuestas.map((respuesta) => (
+                <li
+                  key={respuesta.id}
+                  className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                    <span>
+                      {respuesta.createdBy?.nombre ||
+                        respuesta.createdBy?.username ||
+                        "Administrador"}
+                    </span>
+                    <span>
+                      {new Intl.DateTimeFormat("es-CO", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      }).format(new Date(respuesta.createdAt))}
+                    </span>
+                  </div>
+                  <div className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-blue-500">
+                    Estado: {respuesta.estado}
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">
+                    {respuesta.mensaje}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-2 text-sm text-slate-500">Sin respuestas registradas.</p>
+          )}
         </section>
 
         <Link
