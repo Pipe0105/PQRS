@@ -1,31 +1,66 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateCaseNumber } from "@/lib/case-number";
-import { pqrsCreateSchemaWithDateCheck, pqrsFilterSchema } from "@/lib/validators/pqrs";
+import {
+  fileMetaSchema,
+  pqrsCreateSchemaWithDateCheck,
+  pqrsFilterSchema,
+} from "@/lib/validators/pqrs";
 import { Prisma } from "@prisma/client";
 import { requireApiAdmin, requireApiUser } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
-async function ensureCatalogExists(sedeId: string, plantaId: string, tipoReclamoId: string) {
+async function ensureCatalogExists(
+  sedeId: string,
+  plantaId: string,
+  tipoReclamoId: string,
+) {
   const [sede, planta, tipo] = await Promise.all([
     prisma.sede.findUnique({ where: { id: sedeId }, select: { id: true } }),
     prisma.planta.findUnique({ where: { id: plantaId }, select: { id: true } }),
     prisma.tipoReclamo.findUnique({ where: { id: tipoReclamoId }, select: { id: true } }),
   ]);
 
-  if (!sede || !planta || !tipo) {
-    return false;
-  }
-  return true;
+  return Boolean(sede && planta && tipo);
+}
+
+function getFormField(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return typeof value === "string" ? value : "";
 }
 
 export async function POST(request: Request) {
   const { user, response } = await requireApiUser();
   if (response) return response;
 
-  const payload = await request.json();
-  const parsed = pqrsCreateSchemaWithDateCheck.safeParse(payload);
+  const contentType = request.headers.get("content-type") ?? "";
+  let parsed:
+    | ReturnType<typeof pqrsCreateSchemaWithDateCheck.safeParse>
+    | null = null;
+  let files: File[] = [];
+
+  if (contentType.includes("multipart/form-data")) {
+    const formData = await request.formData();
+    parsed = pqrsCreateSchemaWithDateCheck.safeParse({
+      sedeId: getFormField(formData, "sedeId"),
+      plantaId: getFormField(formData, "plantaId"),
+      tipoReclamoId: getFormField(formData, "tipoReclamoId"),
+      fechaReciboProducto: getFormField(formData, "fechaReciboProducto"),
+      nombre: getFormField(formData, "nombre"),
+      numeroContacto: getFormField(formData, "numeroContacto"),
+      correo: getFormField(formData, "correo"),
+      descripcion: getFormField(formData, "descripcion"),
+    });
+
+    files = formData
+      .getAll("files")
+      .filter((value): value is File => value instanceof File);
+  } else {
+    const payload = await request.json();
+    parsed = pqrsCreateSchemaWithDateCheck.safeParse(payload);
+  }
 
   if (!parsed.success) {
     return NextResponse.json(
@@ -34,8 +69,41 @@ export async function POST(request: Request) {
     );
   }
 
-  const { evidencias, ...data } = parsed.data;
-  const catalogsOk = await ensureCatalogExists(data.sedeId, data.plantaId, data.tipoReclamoId);
+  if (files.length > 5) {
+    return NextResponse.json({ error: "Máximo 5 archivos" }, { status: 400 });
+  }
+
+  const validatedFiles: Array<{
+    name: string;
+    mimeType: string;
+    size: number;
+    buffer: Buffer;
+  }> = [];
+
+  for (const file of files) {
+    const metaParsed = fileMetaSchema.safeParse({
+      name: file.name,
+      mimeType: file.type,
+      size: file.size,
+    });
+    if (!metaParsed.success) {
+      return NextResponse.json({ error: "Archivo inválido" }, { status: 400 });
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    validatedFiles.push({
+      name: metaParsed.data.name,
+      mimeType: metaParsed.data.mimeType,
+      size: metaParsed.data.size,
+      buffer,
+    });
+  }
+
+  const catalogsOk = await ensureCatalogExists(
+    parsed.data.sedeId,
+    parsed.data.plantaId,
+    parsed.data.tipoReclamoId,
+  );
   if (!catalogsOk) {
     return NextResponse.json({ error: "Catálogos inválidos" }, { status: 400 });
   }
@@ -45,19 +113,17 @@ export async function POST(request: Request) {
     try {
       created = await prisma.pqrs.create({
         data: {
-          ...data,
+          ...parsed.data,
           caseNumber: generateCaseNumber(),
           createdById: user?.id,
-          evidencias: evidencias?.length
+          evidencias: validatedFiles.length
             ? {
-                createMany: {
-                  data: evidencias.map((item) => ({
-                    url: item.url,
-                    key: item.key,
-                    mimeType: item.mimeType,
-                    size: item.size,
-                  })),
-                },
+                create: validatedFiles.map((file) => ({
+                  fileName: file.name,
+                  mimeType: file.mimeType,
+                  size: file.size,
+                  data: file.buffer,
+                })),
               }
             : undefined,
         },
@@ -109,7 +175,15 @@ export async function GET(request: Request) {
       sede: true,
       planta: true,
       tipoReclamo: true,
-      evidencias: true,
+      evidencias: {
+        select: {
+          id: true,
+          fileName: true,
+          mimeType: true,
+          size: true,
+          createdAt: true,
+        },
+      },
     },
   });
 

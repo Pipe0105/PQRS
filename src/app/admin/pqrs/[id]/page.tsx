@@ -16,7 +16,15 @@ export default async function AdminPqrsDetailPage({
       sede: true,
       planta: true,
       tipoReclamo: true,
-      evidencias: true,
+      evidencias: {
+        select: {
+          id: true,
+          fileName: true,
+          mimeType: true,
+          size: true,
+          createdAt: true,
+        },
+      },
     },
   });
 
@@ -109,12 +117,12 @@ export default async function AdminPqrsDetailPage({
                 {item.evidencias.map((evidencia) => (
                   <li key={evidencia.id}>
                     <a
-                      href={evidencia.url}
+                      href={`/api/pqrs/${item.id}/evidencias/${evidencia.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm font-semibold text-blue-600 hover:text-blue-800"
                     >
-                      {evidencia.key.split("/").pop()}
+                      {evidencia.fileName}
                     </a>
                   </li>
                 ))}

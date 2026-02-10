@@ -1,11 +1,11 @@
 # PQRS Web App
 
-Formulario público de PQRS con panel interno básico. Stack: Next.js (App Router) + TypeScript + Tailwind + React Hook Form + Zod + Prisma/PostgreSQL + MinIO/S3 presigned URLs.
+Formulario de PQRS con panel interno, autenticación y roles. Stack: Next.js (App Router) + TypeScript + Tailwind + React Hook Form + Zod + Prisma + PostgreSQL.
 
 ## Requisitos
 
 - Node.js 20+
-- Docker (recomendado para Postgres y MinIO)
+- PostgreSQL (local o servidor)
 
 ## Configuración rápida
 
@@ -15,38 +15,27 @@ Formulario público de PQRS con panel interno básico. Stack: Next.js (App Route
 cp .env.example .env
 ```
 
-2) Levanta Postgres y MinIO:
-
-```bash
-docker compose up -d
-```
-
-3) Crea el bucket en MinIO:
-
-- UI: `http://localhost:9001` (usuario `minioadmin`, clave `minioadmin`)
-- Crea un bucket llamado `pqrs`
-
-4) Instala dependencias y genera Prisma Client:
+2) Instala dependencias y genera Prisma Client:
 
 ```bash
 npm install
 npm run prisma:generate
 ```
 
-5) Migraciones y seed:
+3) Migraciones y seed:
 
 ```bash
 npm run prisma:migrate -- --name init
 npm run prisma:seed
 ```
 
-6) Crea el primer administrador:
+4) Crea el primer administrador:
 
 ```bash
 npm run admin:create -- --username admin --password "TuClaveSegura" --nombre "Administrador"
 ```
 
-7) Levanta la app:
+5) Levanta la app:
 
 ```bash
 npm run dev
@@ -54,28 +43,28 @@ npm run dev
 
 ## Rutas
 
-- Formulario público: `http://localhost:3000/pqrs`
+- Formulario: `http://localhost:3000/pqrs`
 - Confirmación: `http://localhost:3000/pqrs/confirmacion/[caseNumber]`
-- Panel interno: `http://localhost:3000/admin/pqrs`
+- Panel admin PQRS: `http://localhost:3000/admin/pqrs`
+- Panel admin usuarios: `http://localhost:3000/admin/usuarios`
 - Login: `http://localhost:3000/login`
 - Recuperación: `http://localhost:3000/reset-password`
 
 ## Endpoints
 
 - `GET /api/catalogos` (sedes, plantas, tipos)
-- `POST /api/pqrs` (crear solicitud)
+- `POST /api/pqrs` (crear solicitud, con archivos multipart)
 - `GET /api/pqrs` (listar para admin)
 - `GET /api/pqrs/:id` (detalle)
-- `POST /api/uploads/presign` (presigned URLs)
+- `GET /api/pqrs/:id/evidencias/:evidenciaId` (descargar archivo)
 
 ## Variables de entorno
 
 Ver `.env.example`. Importantes:
 
 - `DATABASE_URL`
-- `S3_ENDPOINT`, `S3_PUBLIC_BASE_URL`, `S3_BUCKET`
-- `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION`
-- `S3_FORCE_PATH_STYLE=true` para MinIO
+- `SESSION_TTL_DAYS`
+- `RESET_TTL_MINUTES`
 
 ## Scripts útiles
 
@@ -86,6 +75,7 @@ Ver `.env.example`. Importantes:
 ## Notas
 
 - Subidas: máximo 5 archivos, 10MB por archivo, tipos JPG/PNG/PDF.
+- Los archivos se almacenan en PostgreSQL (campo `bytea`).
 - El número de caso se genera con `nanoid` (formato corto, legible).
 - Autenticación:
   - Solo usuarios autenticados pueden enviar PQRS.

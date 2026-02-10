@@ -25,10 +25,10 @@ const formSchema = z
     fechaReciboProducto: z.string().min(1, "Fecha de recibo es obligatoria"),
     tipoReclamoId: z.string().min(1, "Tipo de reclamo es obligatorio"),
     nombre: z.string().min(1, "Nombre es obligatorio"),
-  numeroContacto: z
-    .string()
-    .regex(/^\d{7,15}$/, "Número de contacto debe tener 7 a 15 dígitos"),
-  correo: z.string().email("Correo inválido"),
+    numeroContacto: z
+      .string()
+      .regex(/^\d{7,15}$/, "Número de contacto debe tener 7 a 15 dígitos"),
+    correo: z.string().email("Correo inválido"),
     descripcion: z.string().min(10, "Descripción mínima de 10 caracteres"),
   })
   .superRefine((data, ctx) => {
@@ -151,59 +151,6 @@ export default function PqrsForm() {
     event.currentTarget.value = "";
   }
 
-  async function uploadFiles() {
-    if (!files.length) return [];
-
-    const presignRes = await fetch("/api/uploads/presign", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        files: files.map((file) => ({
-          name: file.name,
-          size: file.size,
-          mimeType: file.type,
-        })),
-      }),
-    });
-
-    if (!presignRes.ok) {
-      throw new Error("No se pudieron preparar los uploads.");
-    }
-
-    const presignData = (await presignRes.json()) as {
-      uploads: Array<{
-        key: string;
-        url: string;
-        publicUrl: string;
-        mimeType: string;
-        size: number;
-        originalName: string;
-      }>;
-    };
-
-    await Promise.all(
-      presignData.uploads.map(async (upload, index) => {
-        const file = files[index];
-        const putRes = await fetch(upload.url, {
-          method: "PUT",
-          headers: { "Content-Type": upload.mimeType },
-          body: file,
-        });
-        if (!putRes.ok) {
-          throw new Error(`Error subiendo ${file.name}`);
-        }
-      }),
-    );
-
-    return presignData.uploads.map((upload) => ({
-      url: upload.publicUrl,
-      key: upload.key,
-      mimeType: upload.mimeType,
-      size: upload.size,
-      originalName: upload.originalName,
-    }));
-  }
-
   async function onSubmit(values: FormValues) {
     setSubmitError(null);
     setSubmitting(true);
@@ -211,19 +158,26 @@ export default function PqrsForm() {
       if (filesError) {
         throw new Error(filesError);
       }
-      const evidenciaPayload = await uploadFiles();
+
+      const formData = new FormData();
+      formData.append("sedeId", values.sedeId);
+      formData.append("plantaId", values.plantaId);
+      formData.append("tipoReclamoId", values.tipoReclamoId);
+      formData.append("fechaReciboProducto", values.fechaReciboProducto);
+      formData.append("nombre", values.nombre);
+      formData.append("numeroContacto", values.numeroContacto);
+      formData.append("correo", values.correo);
+      formData.append("descripcion", values.descripcion);
+      files.forEach((file) => formData.append("files", file));
+
       const res = await fetch("/api/pqrs", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...values,
-          fechaReciboProducto: values.fechaReciboProducto,
-          evidencias: evidenciaPayload,
-        }),
+        body: formData,
       });
 
       if (!res.ok) {
-        throw new Error("No se pudo enviar la solicitud.");
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? "No se pudo enviar la solicitud.");
       }
 
       const data = (await res.json()) as { caseNumber: string };

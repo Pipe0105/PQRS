@@ -18,7 +18,15 @@ export async function GET(
       sede: true,
       planta: true,
       tipoReclamo: true,
-      evidencias: true,
+      evidencias: {
+        select: {
+          id: true,
+          fileName: true,
+          mimeType: true,
+          size: true,
+          createdAt: true,
+        },
+      },
     },
   });
 

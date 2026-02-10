@@ -83,10 +83,10 @@ model Pqrs {
 model PqrsEvidencia {
   id        String   @id @default(uuid())
   pqrsId    String
-  url       String
-  key       String
+  fileName  String
   mimeType  String
   size      Int
+  data      Bytes
   createdAt DateTime @default(now())
 
   pqrs Pqrs @relation(fields: [pqrsId], references: [id], onDelete: Cascade)
