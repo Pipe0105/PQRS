@@ -4,6 +4,7 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { presignSchema } from "@/lib/validators/pqrs";
 import { getS3Client, getPublicUrl } from "@/lib/storage";
 import { nanoid } from "nanoid";
+import { requireApiUser } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,9 @@ function sanitizeFileName(name: string) {
 }
 
 export async function POST(request: Request) {
+  const { response } = await requireApiUser();
+  if (response) return response;
+
   if (!bucket) {
     return NextResponse.json({ error: "S3_BUCKET no configurado" }, { status: 500 });
   }

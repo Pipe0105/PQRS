@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { generateCaseNumber } from "@/lib/case-number";
 import { pqrsCreateSchemaWithDateCheck, pqrsFilterSchema } from "@/lib/validators/pqrs";
 import { Prisma } from "@prisma/client";
+import { requireApiAdmin, requireApiUser } from "@/lib/api-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,9 @@ async function ensureCatalogExists(sedeId: string, plantaId: string, tipoReclamo
 }
 
 export async function POST(request: Request) {
+  const { user, response } = await requireApiUser();
+  if (response) return response;
+
   const payload = await request.json();
   const parsed = pqrsCreateSchemaWithDateCheck.safeParse(payload);
 
@@ -43,6 +47,7 @@ export async function POST(request: Request) {
         data: {
           ...data,
           caseNumber: generateCaseNumber(),
+          createdById: user?.id,
           evidencias: evidencias?.length
             ? {
                 createMany: {
@@ -77,6 +82,9 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
+  const { response } = await requireApiAdmin();
+  if (response) return response;
+
   const { searchParams } = new URL(request.url);
   const filter = pqrsFilterSchema.safeParse({
     sedeId: searchParams.get("sedeId") || undefined,
