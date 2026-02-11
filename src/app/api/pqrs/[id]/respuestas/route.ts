@@ -118,32 +118,36 @@ export async function POST(
     }),
   ]);
 
-  const email = await sendPqrsResponseEmail({
-    caseNumber: pqrs.caseNumber,
-    sede: pqrs.sede.nombre,
-    planta: pqrs.planta.nombre,
-    tipoReclamo: pqrs.tipoReclamo.nombre,
-    fechaReciboProducto: pqrs.fechaReciboProducto,
-    nombre: pqrs.nombre,
-    numeroContacto: pqrs.numeroContacto,
-    correo: pqrs.correo,
-    descripcion: pqrs.descripcion,
-    createdBy: admin?.username ?? null,
-    respuesta: parsed.data.mensaje,
-    estado: parsed.data.estado,
-    attachments: validatedFiles.map((file) => ({
-      fileName: file.fileName,
-      mimeType: file.mimeType,
-      data: Buffer.from(file.data as unknown as Uint8Array),
-    })),
-  });
+  let emailStatus: "sent" | "failed" | "skipped" = "skipped";
+  if (parsed.data.estado === "cerrado") {
+    const email = await sendPqrsResponseEmail({
+      caseNumber: pqrs.caseNumber,
+      sede: pqrs.sede.nombre,
+      planta: pqrs.planta.nombre,
+      tipoReclamo: pqrs.tipoReclamo.nombre,
+      fechaReciboProducto: pqrs.fechaReciboProducto,
+      nombre: pqrs.nombre,
+      numeroContacto: pqrs.numeroContacto,
+      correo: pqrs.correo,
+      descripcion: pqrs.descripcion,
+      createdBy: admin?.username ?? null,
+      respuesta: parsed.data.mensaje,
+      estado: parsed.data.estado,
+      attachments: validatedFiles.map((file) => ({
+        fileName: file.fileName,
+        mimeType: file.mimeType,
+        data: Buffer.from(file.data as unknown as Uint8Array),
+      })),
+    });
 
-  if (!email.ok) {
-    console.warn("response email failed", email.error);
+    emailStatus = email.ok ? "sent" : "failed";
+    if (!email.ok) {
+      console.warn("response email failed", email.error);
+    }
   }
 
   return NextResponse.json(
-    { respuesta, email: email.ok ? "sent" : "failed" },
+    { respuesta, email: emailStatus },
     { status: 201 },
   );
 }

@@ -27,7 +27,10 @@ const formSchema = z
     nombre: z.string().min(1, "Nombre es obligatorio"),
     numeroContacto: z
       .string()
-      .regex(/^\d{7,15}$/, "Número de contacto debe tener 7 a 15 dígitos"),
+      .regex(
+        /^\d{7,15}$/,
+        "Número de la persona que genera la PQRS debe tener 7 a 15 dígitos",
+      ),
     correo: z.string().email("Correo inválido"),
     descripcion: z.string().min(10, "Descripción mínima de 10 caracteres"),
   })
@@ -265,9 +268,9 @@ export default function PqrsForm() {
             disabled={catalogosLoading}
           >
             <option value="">Elegir</option>
-            {catalogos?.tipos.map((tipo) => (
+            {catalogos?.tipos.map((tipo, index) => (
               <option key={tipo.id} value={tipo.id}>
-                {tipo.nombre}
+                {index === catalogos.tipos.length - 1 ? `${tipo.nombre}, Rótulo` : tipo.nombre}
               </option>
             ))}
           </select>
@@ -292,7 +295,7 @@ export default function PqrsForm() {
         </label>
 
         <label className="flex flex-col gap-2 text-sm font-semibold text-slate-700">
-          Número contacto *
+          Numero de la persona que genera la PQRS *
           <input
             type="tel"
             {...register("numeroContacto")}

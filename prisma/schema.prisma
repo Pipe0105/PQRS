@@ -26,6 +26,7 @@ model Sede {
 
   plantas Planta[]
   pqrs    Pqrs[]
+  users   User[]
 }
 
 model Planta {
@@ -105,9 +106,11 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   createdById  String?
+  sedeId       String?
 
   createdBy               User?                @relation("UserCreatedBy", fields: [createdById], references: [id])
   createdUsers            User[]               @relation("UserCreatedBy")
+  sede                    Sede?                @relation(fields: [sedeId], references: [id], onDelete: SetNull)
   sessions                Session[]
   passwordResetTokens     PasswordResetToken[]
   passwordResetCreated    PasswordResetToken[] @relation("UserPasswordResetCreatedBy")
@@ -115,6 +118,7 @@ model User {
   pqrsRespuestas          PqrsRespuesta[]
 
   @@index([createdById])
+  @@index([sedeId])
 }
 
 model PqrsRespuesta {

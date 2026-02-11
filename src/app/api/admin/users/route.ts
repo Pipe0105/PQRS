@@ -32,7 +32,18 @@ export async function GET() {
     },
   });
 
-  return NextResponse.json({ users });
+  const userSedeRows = await prisma.$queryRawUnsafe<
+    Array<{ id: string; sedeNombre: string | null }>
+  >(
+    'SELECT u."id", s."nombre" as "sedeNombre" FROM "User" u LEFT JOIN "Sede" s ON s."id" = u."sedeId"',
+  );
+  const sedeByUserId = new Map(userSedeRows.map((row) => [row.id, row.sedeNombre]));
+  const usersWithSede = users.map((user) => ({
+    ...user,
+    sede: sedeByUserId.get(user.id) ? { nombre: sedeByUserId.get(user.id) as string } : null,
+  }));
+
+  return NextResponse.json({ users: usersWithSede });
 }
 
 export async function POST(request: Request) {

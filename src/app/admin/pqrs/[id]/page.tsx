@@ -103,7 +103,7 @@ export default async function AdminPqrsDetailPage({
             </div>
             <div>
               <dt className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                Numero contacto
+                Numero de la persona que genera la PQRS
               </dt>
               <dd className="text-sm font-semibold text-slate-800">{item.numeroContacto}</dd>
             </div>

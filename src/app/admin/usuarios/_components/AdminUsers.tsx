@@ -6,6 +6,7 @@ type UserRow = {
   id: string;
   username: string;
   nombre: string | null;
+  sede?: { nombre: string } | null;
   role: "admin" | "usuario";
   isActive: boolean;
   createdAt: string;
@@ -186,6 +187,7 @@ export default function AdminUsers() {
             <tr>
               <th className="py-2">Usuario</th>
               <th className="py-2">Nombre</th>
+              <th className="py-2">Sede</th>
               <th className="py-2">Rol</th>
               <th className="py-2">Estado</th>
               <th className="py-2">Creado</th>
@@ -195,13 +197,13 @@ export default function AdminUsers() {
           <tbody className="text-slate-700">
             {loading ? (
               <tr>
-                <td colSpan={6} className="py-6 text-center text-slate-500">
+                <td colSpan={7} className="py-6 text-center text-slate-500">
                   Cargando usuarios...
                 </td>
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-6 text-center text-slate-500">
+                <td colSpan={7} className="py-6 text-center text-slate-500">
                   No hay usuarios aún.
                 </td>
               </tr>
@@ -210,6 +212,7 @@ export default function AdminUsers() {
                 <tr key={user.id} className="border-t border-slate-100">
                   <td className="py-3 font-semibold text-slate-900">{user.username}</td>
                   <td className="py-3">{user.nombre ?? "-"}</td>
+                  <td className="py-3">{user.sede?.nombre ?? "-"}</td>
                   <td className="py-3">
                     <select
                       value={user.role}
