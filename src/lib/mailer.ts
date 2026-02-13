@@ -13,6 +13,11 @@ type MailPayload = {
   correo: string;
   descripcion: string;
   createdBy?: string | null;
+  attachments?: Array<{
+    fileName: string;
+    mimeType: string;
+    data: Buffer;
+  }>;
 };
 
 type ResponsePayload = MailPayload & {
@@ -96,6 +101,11 @@ ${payload.descripcion}
       subject,
       text,
       html,
+      attachments: payload.attachments?.map((file) => ({
+        filename: file.fileName,
+        content: file.data,
+        contentType: file.mimeType,
+      })),
     });
     return { ok: true };
   } catch (error) {

@@ -9,6 +9,7 @@ import {
 import { Prisma } from "@prisma/client";
 import { requireApiAdmin, requireApiUser } from "@/lib/api-auth";
 import { sendPqrsNotification } from "@/lib/mailer";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -35,6 +36,14 @@ function getFormField(formData: FormData, key: string) {
 export async function POST(request: Request) {
   const { user, response } = await requireApiUser();
   if (response) return response;
+  const userEmailParsed = z.string().email().safeParse(user.username);
+  if (!userEmailParsed.success) {
+    return NextResponse.json(
+      { error: "El usuario no tiene un correo valido en su cuenta" },
+      { status: 400 },
+    );
+  }
+  const userEmail = userEmailParsed.data;
 
   const contentType = request.headers.get("content-type") ?? "";
   let parsed:
@@ -51,7 +60,7 @@ export async function POST(request: Request) {
       fechaReciboProducto: getFormField(formData, "fechaReciboProducto"),
       nombre: getFormField(formData, "nombre"),
       numeroContacto: getFormField(formData, "numeroContacto"),
-      correo: getFormField(formData, "correo"),
+      correo: userEmail,
       descripcion: getFormField(formData, "descripcion"),
     });
 
@@ -60,7 +69,10 @@ export async function POST(request: Request) {
       .filter((value): value is File => value instanceof File);
   } else {
     const payload = await request.json();
-    parsed = pqrsCreateSchemaWithDateCheck.safeParse(payload);
+    parsed = pqrsCreateSchemaWithDateCheck.safeParse({
+      ...payload,
+      correo: userEmail,
+    });
   }
 
   if (!parsed.success) {
@@ -69,6 +81,24 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+
+  const userRows = await prisma.$queryRawUnsafe<Array<{ sedeId: string | null }>>(
+    'SELECT "sedeId" FROM "User" WHERE "id" = $1 LIMIT 1',
+    user.id,
+  );
+  const userSedeId = userRows[0]?.sedeId ?? null;
+  const effectiveSedeId = userSedeId ?? parsed.data.sedeId;
+  if (!effectiveSedeId) {
+    return NextResponse.json(
+      { error: "Debes seleccionar una sede" },
+      { status: 400 },
+    );
+  }
+
+  const payloadWithUserSede = {
+    ...parsed.data,
+    sedeId: effectiveSedeId,
+  };
 
   if (files.length > 5) {
     return NextResponse.json({ error: "Máximo 5 archivos" }, { status: 400 });
@@ -102,9 +132,9 @@ export async function POST(request: Request) {
   }
 
   const catalogsOk = await ensureCatalogExists(
-    parsed.data.sedeId,
-    parsed.data.plantaId,
-    parsed.data.tipoReclamoId,
+    payloadWithUserSede.sedeId,
+    payloadWithUserSede.plantaId,
+    payloadWithUserSede.tipoReclamoId,
   );
   if (!catalogsOk) {
     return NextResponse.json({ error: "Catálogos inválidos" }, { status: 400 });
@@ -113,10 +143,11 @@ export async function POST(request: Request) {
   let created;
   for (let attempt = 0; attempt < 5; attempt += 1) {
     try {
+      const caseNumber = await generateCaseNumber(prisma);
       created = await prisma.pqrs.create({
         data: {
-          ...parsed.data,
-          caseNumber: generateCaseNumber(),
+          ...payloadWithUserSede,
+          caseNumber,
           createdById: user?.id,
           evidencias: validatedFiles.length
             ? {
@@ -166,6 +197,11 @@ export async function POST(request: Request) {
     correo: created.correo,
     descripcion: created.descripcion,
     createdBy: user?.username ?? null,
+    attachments: validatedFiles.map((file) => ({
+      fileName: file.name,
+      mimeType: file.mimeType,
+      data: Buffer.from(file.buffer as unknown as Uint8Array),
+    })),
   });
 
   if (!email.ok) {
@@ -198,9 +234,9 @@ export async function GET(request: Request) {
     sedeId: filter.data.sedeId,
     plantaId: filter.data.plantaId,
   };
-  if (filter.data.estado) {
+  if (filter.data.estado && filter.data.estado !== "todos") {
     where.estado = filter.data.estado;
-  } else {
+  } else if (!filter.data.estado) {
     where.estado = { in: ["abierto", "en_proceso"] };
   }
 

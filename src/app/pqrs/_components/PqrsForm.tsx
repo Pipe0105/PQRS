@@ -18,6 +18,10 @@ type CatalogosResponse = {
   tipos: CatalogoItem[];
 };
 
+type Props = {
+  userEmail: string;
+};
+
 const formSchema = z
   .object({
     sedeId: z.string().min(1, "Sede es obligatoria"),
@@ -60,7 +64,7 @@ type FormValues = z.infer<typeof formSchema>;
 const MAX_FILES = 5;
 const MAX_SIZE = 10 * 1024 * 1024;
 
-export default function PqrsForm() {
+export default function PqrsForm({ userEmail }: Props) {
   const router = useRouter();
   const [catalogos, setCatalogos] = useState<CatalogosResponse | null>(null);
   const [catalogosError, setCatalogosError] = useState<string | null>(null);
@@ -69,14 +73,19 @@ export default function PqrsForm() {
   const [filesError, setFilesError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const hasSingleAssignedSede = (catalogos?.sedes.length ?? 0) === 1;
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     mode: "onBlur",
+    defaultValues: {
+      correo: userEmail,
+    },
   });
 
   useEffect(() => {
@@ -91,6 +100,11 @@ export default function PqrsForm() {
         const data = (await res.json()) as CatalogosResponse;
         if (mounted) {
           setCatalogos(data);
+          if (data.sedes.length === 1) {
+            setValue("sedeId", data.sedes[0].id, { shouldValidate: true });
+          } else {
+            setValue("sedeId", "", { shouldValidate: false });
+          }
         }
       } catch (error) {
         if (mounted) {
@@ -109,7 +123,11 @@ export default function PqrsForm() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [setValue]);
+
+  useEffect(() => {
+    setValue("correo", userEmail, { shouldValidate: true });
+  }, [setValue, userEmail]);
 
   const fileListText = useMemo(() => {
     if (!files.length) return "Sin archivos seleccionados";
@@ -212,15 +230,26 @@ export default function PqrsForm() {
           <select
             {...register("sedeId")}
             className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm"
-            disabled={catalogosLoading}
+            disabled={catalogosLoading || hasSingleAssignedSede}
           >
-            <option value="">Elegir</option>
+            <option value="">
+              {catalogosLoading
+                ? "Cargando..."
+                : hasSingleAssignedSede
+                  ? (catalogos?.sedes[0]?.nombre ?? "Sin sede asignada")
+                  : "Elegir"}
+            </option>
             {catalogos?.sedes.map((sede) => (
               <option key={sede.id} value={sede.id}>
                 {sede.nombre}
               </option>
             ))}
           </select>
+          <p className="text-xs font-normal text-slate-500">
+            {hasSingleAssignedSede
+              ? `Esta PQRS la esta realizando la sede: ${catalogos?.sedes[0]?.nombre ?? "No asignada"}.`
+              : "No tienes sede vinculada. Selecciona la sede desde la lista."}
+          </p>
           {errors.sedeId ? (
             <span className="text-xs font-normal text-red-600">{errors.sedeId.message}</span>
           ) : null}
@@ -314,8 +343,8 @@ export default function PqrsForm() {
           <input
             type="email"
             {...register("correo")}
-            placeholder="Tu respuesta"
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm"
+            readOnly
+            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 shadow-sm"
           />
           {errors.correo ? (
             <span className="text-xs font-normal text-red-600">{errors.correo.message}</span>

@@ -17,7 +17,7 @@ export default async function AdminPqrsPage({
   const initialFilters = {
     sedeId: resolvedSearchParams?.sedeId ?? "",
     plantaId: resolvedSearchParams?.plantaId ?? "",
-    estado: resolvedSearchParams?.estado ?? "",
+    estado: resolvedSearchParams?.estado ?? "todos",
   };
 
   return (

@@ -11,6 +11,7 @@ const createUserSchema = z.object({
   nombre: z.string().min(1).optional(),
   password: z.string().min(8),
   role: z.enum(["admin", "usuario"]).default("usuario"),
+  sedeId: z.string().min(1).optional(),
 });
 
 export async function GET() {
@@ -37,13 +38,17 @@ export async function GET() {
   >(
     'SELECT u."id", s."nombre" as "sedeNombre" FROM "User" u LEFT JOIN "Sede" s ON s."id" = u."sedeId"',
   );
+  const sedes = await prisma.sede.findMany({
+    select: { id: true, nombre: true },
+    orderBy: { nombre: "asc" },
+  });
   const sedeByUserId = new Map(userSedeRows.map((row) => [row.id, row.sedeNombre]));
   const usersWithSede = users.map((user) => ({
     ...user,
     sede: sedeByUserId.get(user.id) ? { nombre: sedeByUserId.get(user.id) as string } : null,
   }));
 
-  return NextResponse.json({ users: usersWithSede });
+  return NextResponse.json({ users: usersWithSede, sedes });
 }
 
 export async function POST(request: Request) {
@@ -85,6 +90,14 @@ export async function POST(request: Request) {
       createdAt: true,
     },
   });
+
+  if (parsed.data.sedeId) {
+    await prisma.$executeRawUnsafe(
+      'UPDATE "User" SET "sedeId" = $1 WHERE "id" = $2',
+      parsed.data.sedeId,
+      created.id,
+    );
+  }
 
   return NextResponse.json({ user: created }, { status: 201 });
 }

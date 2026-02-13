@@ -45,7 +45,7 @@ export default function AdminPqrsList({ initialFilters }: Props) {
   const [filters, setFilters] = useState<Filters>(() => ({
     sedeId: initialFilters?.sedeId ?? "",
     plantaId: initialFilters?.plantaId ?? "",
-    estado: initialFilters?.estado ?? "",
+    estado: initialFilters?.estado ?? "todos",
   }));
   const [items, setItems] = useState<PqrsItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -158,6 +158,7 @@ export default function AdminPqrsList({ initialFilters }: Props) {
             className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm"
           >
             <option value="">Pendientes</option>
+            <option value="todos">Todos</option>
             <option value="abierto">Abierto</option>
             <option value="en_proceso">En proceso</option>
             <option value="cerrado">Cerrado</option>

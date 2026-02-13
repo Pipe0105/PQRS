@@ -55,7 +55,7 @@ export const pqrsCreateSchemaWithDateCheck = pqrsCreateSchema
 export const pqrsFilterSchema = z.object({
   sedeId: z.string().optional(),
   plantaId: z.string().optional(),
-  estado: z.enum(["abierto", "en_proceso", "cerrado"]).optional(),
+  estado: z.enum(["abierto", "en_proceso", "cerrado", "todos"]).optional(),
 });
 
 export const fileMetaSchema = z.object({
