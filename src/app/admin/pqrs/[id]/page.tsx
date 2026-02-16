@@ -103,13 +103,19 @@ export default async function AdminPqrsDetailPage({
             </div>
             <div>
               <dt className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                Numero de la persona que genera la PQRS
+                Numero de celular de la persona que genera la PQRS
               </dt>
               <dd className="text-sm font-semibold text-slate-800">{item.numeroContacto}</dd>
             </div>
             <div>
               <dt className="text-xs uppercase tracking-[0.2em] text-slate-400">Correo</dt>
               <dd className="text-sm font-semibold text-slate-800">{item.correo}</dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase tracking-[0.2em] text-slate-400">Lote</dt>
+              <dd className="text-sm font-semibold text-slate-800">
+                {item.lote ?? "No aplica"}
+              </dd>
             </div>
             <div>
               <dt className="text-xs uppercase tracking-[0.2em] text-slate-400">

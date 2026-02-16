@@ -129,6 +129,7 @@ export async function POST(
       nombre: pqrs.nombre,
       numeroContacto: pqrs.numeroContacto,
       correo: pqrs.correo,
+      lote: pqrs.lote,
       descripcion: pqrs.descripcion,
       createdBy: admin?.username ?? null,
       respuesta: parsed.data.mensaje,

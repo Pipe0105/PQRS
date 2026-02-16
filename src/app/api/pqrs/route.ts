@@ -61,6 +61,7 @@ export async function POST(request: Request) {
       nombre: getFormField(formData, "nombre"),
       numeroContacto: getFormField(formData, "numeroContacto"),
       correo: userEmail,
+      lote: getFormField(formData, "lote"),
       descripcion: getFormField(formData, "descripcion"),
     });
 
@@ -82,11 +83,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const userRows = await prisma.$queryRawUnsafe<Array<{ sedeId: string | null }>>(
-    'SELECT "sedeId" FROM "User" WHERE "id" = $1 LIMIT 1',
-    user.id,
-  );
-  const userSedeId = userRows[0]?.sedeId ?? null;
+  let userSedeId: string | null = null;
+  try {
+    const userWithSede = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { sedeId: true },
+    });
+    userSedeId = userWithSede?.sedeId ?? null;
+  } catch (error) {
+    console.error("pqrs: failed to resolve user sede", error);
+  }
   const effectiveSedeId = userSedeId ?? parsed.data.sedeId;
   if (!effectiveSedeId) {
     return NextResponse.json(
@@ -195,6 +201,7 @@ export async function POST(request: Request) {
     nombre: created.nombre,
     numeroContacto: created.numeroContacto,
     correo: created.correo,
+    lote: created.lote,
     descripcion: created.descripcion,
     createdBy: user?.username ?? null,
     attachments: validatedFiles.map((file) => ({

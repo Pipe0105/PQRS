@@ -33,9 +33,13 @@ const formSchema = z
       .string()
       .regex(
         /^\d{7,15}$/,
-        "Número de la persona que genera la PQRS debe tener 7 a 15 dígitos",
+        "Numero de celular de la persona que genera la PQRS debe tener 7 a 15 digitos",
       ),
     correo: z.string().email("Correo inválido"),
+    lote: z
+      .string()
+      .min(1, "Lote es obligatorio")
+      .regex(/^[A-Za-z0-9]+$/, "Lote solo permite letras y numeros"),
     descripcion: z.string().min(10, "Descripción mínima de 10 caracteres"),
   })
   .superRefine((data, ctx) => {
@@ -129,6 +133,8 @@ export default function PqrsForm({ userEmail }: Props) {
     setValue("correo", userEmail, { shouldValidate: true });
   }, [setValue, userEmail]);
 
+  const numeroContactoRegister = register("numeroContacto");
+
   const fileListText = useMemo(() => {
     if (!files.length) return "Sin archivos seleccionados";
     return files.map((file) => file.name).join(", ");
@@ -188,6 +194,7 @@ export default function PqrsForm({ userEmail }: Props) {
       formData.append("nombre", values.nombre);
       formData.append("numeroContacto", values.numeroContacto);
       formData.append("correo", values.correo);
+      formData.append("lote", values.lote);
       formData.append("descripcion", values.descripcion);
       files.forEach((file) => formData.append("files", file));
 
@@ -324,10 +331,17 @@ export default function PqrsForm({ userEmail }: Props) {
         </label>
 
         <label className="flex flex-col gap-2 text-sm font-semibold text-slate-700">
-          Numero de la persona que genera la PQRS *
+          Numero de celular de la persona que genera la PQRS *
           <input
             type="tel"
-            {...register("numeroContacto")}
+            {...numeroContactoRegister}
+            inputMode="numeric"
+            pattern="[0-9]*"
+            onChange={(event) => {
+              const cleaned = event.target.value.replace(/\D/g, "");
+              event.target.value = cleaned;
+              numeroContactoRegister.onChange(event);
+            }}
             placeholder="Tu respuesta"
             className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm"
           />
@@ -351,6 +365,18 @@ export default function PqrsForm({ userEmail }: Props) {
           ) : null}
         </label>
 
+        <label className="flex flex-col gap-2 text-sm font-semibold text-slate-700">
+          Lote *
+          <input
+            type="text"
+            {...register("lote")}
+            placeholder="Tu respuesta"
+            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm"
+          />
+          {errors.lote ? (
+            <span className="text-xs font-normal text-red-600">{errors.lote.message}</span>
+          ) : null}
+        </label>
         <label className="flex flex-col gap-2 text-sm font-semibold text-slate-700">
           Describa la novedad *
           <textarea
@@ -425,3 +451,5 @@ export default function PqrsForm({ userEmail }: Props) {
     </form>
   );
 }
+
+

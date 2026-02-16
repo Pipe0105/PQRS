@@ -33,6 +33,7 @@ export async function POST(request: Request) {
     nombre: user?.nombre ?? user?.username ?? "Administrador",
     numeroContacto: "0000000",
     correo: "no-reply@mercamio.com",
+    lote: "LOTE123",
     descripcion: "Este es un correo de prueba para validar SMTP.",
     createdBy: user?.username ?? null,
   });

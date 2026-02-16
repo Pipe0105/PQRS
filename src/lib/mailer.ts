@@ -11,6 +11,7 @@ type MailPayload = {
   nombre: string;
   numeroContacto: string;
   correo: string;
+  lote: string | null;
   descripcion: string;
   createdBy?: string | null;
   attachments?: Array<{
@@ -74,6 +75,7 @@ Fecha recibo: ${fecha}
 Nombre: ${payload.nombre}
 Contacto: ${payload.numeroContacto}
 Correo: ${payload.correo}
+Lote: ${payload.lote ?? "No aplica"}
 Usuario: ${payload.createdBy ?? "No aplica"}
 
 Descripcion:
@@ -89,6 +91,7 @@ ${payload.descripcion}
     <p><strong>Nombre:</strong> ${payload.nombre}</p>
     <p><strong>Contacto:</strong> ${payload.numeroContacto}</p>
     <p><strong>Correo:</strong> ${payload.correo}</p>
+    <p><strong>Lote:</strong> ${payload.lote ?? "No aplica"}</p>
     <p><strong>Usuario:</strong> ${payload.createdBy ?? "No aplica"}</p>
     <p><strong>Descripcion:</strong></p>
     <pre style="white-space: pre-wrap; font-family: inherit;">${payload.descripcion}</pre>

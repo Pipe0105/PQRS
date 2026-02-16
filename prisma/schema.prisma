@@ -62,6 +62,7 @@ model Pqrs {
   nombre              String
   numeroContacto      String
   correo              String
+  lote                String?
   descripcion         String
   estado              PqrsEstado  @default(abierto)
   createdAt           DateTime    @default(now())

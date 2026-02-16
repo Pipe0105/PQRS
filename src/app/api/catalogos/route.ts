@@ -8,11 +8,16 @@ export async function GET() {
   const { user, response } = await requireApiUser();
   if (response) return response;
 
-  const userRows = await prisma.$queryRawUnsafe<Array<{ sedeId: string | null }>>(
-    'SELECT "sedeId" FROM "User" WHERE "id" = $1 LIMIT 1',
-    user.id,
-  );
-  const userSedeId = userRows[0]?.sedeId ?? null;
+  let userSedeId: string | null = null;
+  try {
+    const userWithSede = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { sedeId: true },
+    });
+    userSedeId = userWithSede?.sedeId ?? null;
+  } catch (error) {
+    console.error("catalogos: failed to resolve user sede", error);
+  }
 
   const [sedes, plantas, tipos] = userSedeId
     ? await Promise.all([
