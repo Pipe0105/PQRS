@@ -3,12 +3,21 @@ import type { PrismaClient } from "@prisma/client";
 const CASE_PREFIX = "CASO-";
 
 export async function generateCaseNumber(prisma: PrismaClient) {
-  const rows = await prisma.$queryRawUnsafe<Array<{ maxNumber: number | string | null }>>(
-    `SELECT COALESCE(MAX((substring("caseNumber" from '^${CASE_PREFIX}(\\d+)$'))::int), 0) AS "maxNumber"
-     FROM "Pqrs"`,
-  );
+  const existing = await prisma.pqrs.findMany({
+    where: { caseNumber: { startsWith: CASE_PREFIX } },
+    select: { caseNumber: true },
+  });
 
-  const current = Number(rows[0]?.maxNumber ?? 0);
-  const next = Number.isFinite(current) ? current + 1 : 1;
-  return `${CASE_PREFIX}${next}`;
+  let maxNumber = 0;
+
+  for (const item of existing) {
+    const raw = item.caseNumber.slice(CASE_PREFIX.length);
+    const value = Number.parseInt(raw, 10);
+
+    if (Number.isFinite(value) && value > maxNumber) {
+      maxNumber = value;
+    }
+  }
+
+  return `${CASE_PREFIX}${maxNumber + 1}`;
 }

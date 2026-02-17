@@ -1,18 +1,17 @@
 version: "3.9"
 
 services:
-  postgres:
-    image: postgres:16
-    container_name: pqrs-postgres
+  mysql:
+    image: mysql:8.4
+    container_name: pqrs-mysql
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: pqrs
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: pqrs
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - pqrs_pgdata:/var/lib/postgresql/data
+      - pqrs_mysqldata:/var/lib/mysql
 
 volumes:
-  pqrs_pgdata:
+  pqrs_mysqldata:

@@ -1,11 +1,11 @@
 # PQRS Web App
 
-Formulario de PQRS con panel interno, autenticacion y roles. Stack: Next.js (App Router) + TypeScript + Tailwind + React Hook Form + Zod + Prisma + PostgreSQL.
+Formulario de PQRS con panel interno, autenticacion y roles. Stack: Next.js (App Router) + TypeScript + Tailwind + React Hook Form + Zod + Prisma + MySQL.
 
 ## Requisitos
 
 - Node.js 20+
-- PostgreSQL (local o servidor)
+- MySQL/MariaDB (local o servidor)
 
 ## Configuracion rapida
 
@@ -79,7 +79,7 @@ Ver `.env.example`. Importantes:
 ## Notas
 
 - Subidas: maximo 5 archivos, 10MB por archivo, tipos JPG/PNG/PDF.
-- Los archivos se almacenan en PostgreSQL (campo `bytea`).
+- Los archivos se almacenan en MySQL (columna binaria administrada por Prisma para `Bytes`).
 - El numero de caso se genera con `nanoid` (formato corto, legible).
 - autenticacion:
   - Solo usuarios autenticados pueden enviar PQRS.
@@ -87,5 +87,4 @@ Ver `.env.example`. Importantes:
   - Recuperacion de contrasena usa un token generado por admin (sin email).
 - Notificacion por correo:
   - Se envia al crear una solicitud si el SMTP está configurado.
-
 
