@@ -58,13 +58,23 @@ function getCaseUrl(caseNumber: string) {
   return `${baseUrl}/pqrs/confirmacion/${encodeURIComponent(caseNumber)}`;
 }
 
+function getNotificationRecipients() {
+  const raw = process.env.SMTP_TO ?? "";
+  const parsed = raw
+    .split(/[;,]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return Array.from(new Set(parsed));
+}
+
 export async function sendPqrsNotification(payload: MailPayload) {
   const transport = getTransport();
-  const to = process.env.SMTP_TO;
+  const recipients = getNotificationRecipients();
   const from = process.env.SMTP_FROM ?? process.env.SMTP_USER;
   const caseUrl = getCaseUrl(payload.caseNumber);
 
-  if (!transport || !to || !from) {
+  if (!transport || recipients.length === 0 || !from) {
     return { ok: false, error: "SMTP no configurado" };
   }
 
@@ -106,18 +116,33 @@ ${payload.descripcion}
   `;
 
   try {
-    await transport.sendMail({
-      from,
-      to,
-      subject,
-      text,
-      html,
-      attachments: payload.attachments?.map((file) => ({
-        filename: file.fileName,
-        content: file.data,
-        contentType: file.mimeType,
-      })),
-    });
+    const failedRecipients: string[] = [];
+    for (const recipient of recipients) {
+      const info = await transport.sendMail({
+        from,
+        to: recipient,
+        subject,
+        text,
+        html,
+        attachments: payload.attachments?.map((file) => ({
+          filename: file.fileName,
+          content: file.data,
+          contentType: file.mimeType,
+        })),
+      });
+
+      if (info.rejected?.length) {
+        failedRecipients.push(recipient);
+      }
+    }
+
+    if (failedRecipients.length) {
+      return {
+        ok: false,
+        error: `Rechazado por SMTP para: ${failedRecipients.join(", ")}`,
+      };
+    }
+
     return { ok: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error enviando correo";
