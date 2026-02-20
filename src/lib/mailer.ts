@@ -53,10 +53,16 @@ function getTransport() {
   });
 }
 
+function getCaseUrl(caseNumber: string) {
+  const baseUrl = (process.env.APP_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+  return `${baseUrl}/pqrs/confirmacion/${encodeURIComponent(caseNumber)}`;
+}
+
 export async function sendPqrsNotification(payload: MailPayload) {
   const transport = getTransport();
   const to = process.env.SMTP_TO;
   const from = process.env.SMTP_FROM ?? process.env.SMTP_USER;
+  const caseUrl = getCaseUrl(payload.caseNumber);
 
   if (!transport || !to || !from) {
     return { ok: false, error: "SMTP no configurado" };
@@ -77,6 +83,7 @@ Contacto: ${payload.numeroContacto}
 Correo: ${payload.correo}
 Lote: ${payload.lote ?? "No aplica"}
 Usuario: ${payload.createdBy ?? "No aplica"}
+Ver caso: ${caseUrl}
 
 Descripcion:
 ${payload.descripcion}
@@ -93,6 +100,7 @@ ${payload.descripcion}
     <p><strong>Correo:</strong> ${payload.correo}</p>
     <p><strong>Lote:</strong> ${payload.lote ?? "No aplica"}</p>
     <p><strong>Usuario:</strong> ${payload.createdBy ?? "No aplica"}</p>
+    <p><strong>Ver caso:</strong> <a href="${caseUrl}">${caseUrl}</a></p>
     <p><strong>Descripcion:</strong></p>
     <pre style="white-space: pre-wrap; font-family: inherit;">${payload.descripcion}</pre>
   `;

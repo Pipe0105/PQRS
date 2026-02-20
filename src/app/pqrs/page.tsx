@@ -53,7 +53,7 @@ export default async function PqrsPage() {
               </h1>
               <p className="mt-2 text-sm text-slate-600 sm:text-base">
                 Formulario para la recepcion de Peticiones, Quejas, Reclamos, Solicitudes de
-                Informacion y Sugerencias.
+                Informacion y Sugerencias de la planta
               </p>
             </div>
           </div>

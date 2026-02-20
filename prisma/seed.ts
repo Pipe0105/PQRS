@@ -4,7 +4,14 @@ const prisma = new PrismaClient();
 
 async function main() {
   const sedes = ["Mercamio Central", "Mercatodo Norte", "Mercamio Sur"];
-  const tipos = ["Petición", "Queja", "Reclamo", "Solicitud de información", "Sugerencia"];
+  const tipos = [
+    "Peticion",
+    "Queja",
+    "Reclamo",
+    "Solicitud de informacion",
+    "Sugerencia",
+    "Vehiculos de tranporte",
+  ];
 
   const sedeRecords = await Promise.all(
     sedes.map((nombre) =>
@@ -66,3 +73,4 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+

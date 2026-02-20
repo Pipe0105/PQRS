@@ -25,8 +25,9 @@ export const pqrsCreateSchema = z.object({
   correo: z.string().email("Correo invalido"),
   lote: z
     .string()
-    .min(1, "Lote es obligatorio")
-    .regex(/^[A-Za-z0-9]+$/, "Lote invalido"),
+    .trim()
+    .refine((value) => value === "" || /^[A-Za-z0-9]+$/.test(value), "Lote invalido")
+    .transform((value) => (value === "" ? null : value)),
   descripcion: z.string().min(10, "Descripcion minima de 10 caracteres"),
 });
 

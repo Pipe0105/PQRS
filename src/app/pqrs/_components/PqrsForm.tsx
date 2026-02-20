@@ -38,8 +38,11 @@ const formSchema = z
     correo: z.string().email("Correo inválido"),
     lote: z
       .string()
-      .min(1, "Lote es obligatorio")
-      .regex(/^[A-Za-z0-9]+$/, "Lote solo permite letras y numeros"),
+      .trim()
+      .refine(
+        (value) => value === "" || /^[A-Za-z0-9]+$/.test(value),
+        "Lote solo permite letras y numeros",
+      ),
     descripcion: z.string().min(10, "Descripción mínima de 10 caracteres"),
   })
   .superRefine((data, ctx) => {
@@ -78,6 +81,12 @@ export default function PqrsForm({ userEmail }: Props) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const hasSingleAssignedSede = (catalogos?.sedes.length ?? 0) === 1;
+  const vehiculoIndex =
+    catalogos?.tipos.findIndex((tipo) =>
+      tipo.nombre.toLowerCase().includes("vehiculos de tranporte"),
+    ) ?? -1;
+  const rotuloIndex =
+    vehiculoIndex > 0 ? vehiculoIndex - 1 : (catalogos?.tipos.length ?? 1) - 1;
 
   const {
     register,
@@ -276,6 +285,9 @@ export default function PqrsForm({ userEmail }: Props) {
               </option>
             ))}
           </select>
+          <p className="text-xs font-normal text-slate-500">
+            Formulario para la recepcion de Peticiones, Quejas, Reclamos, Solicitudes de Informacion y Sugerencias de la planta
+          </p>
           {errors.plantaId ? (
             <span className="text-xs font-normal text-red-600">{errors.plantaId.message}</span>
           ) : null}
@@ -306,7 +318,7 @@ export default function PqrsForm({ userEmail }: Props) {
             <option value="">Elegir</option>
             {catalogos?.tipos.map((tipo, index) => (
               <option key={tipo.id} value={tipo.id}>
-                {index === catalogos.tipos.length - 1 ? `${tipo.nombre}, Rótulo` : tipo.nombre}
+                {index === rotuloIndex ? `${tipo.nombre}, Rótulo` : tipo.nombre}
               </option>
             ))}
           </select>
@@ -366,7 +378,7 @@ export default function PqrsForm({ userEmail }: Props) {
         </label>
 
         <label className="flex flex-col gap-2 text-sm font-semibold text-slate-700">
-          Lote *
+          Lote
           <input
             type="text"
             {...register("lote")}

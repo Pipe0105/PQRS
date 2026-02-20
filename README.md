@@ -69,6 +69,7 @@ Ver `.env.example`. Importantes:
 - `RESET_TTL_MINUTES`
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
 - `SMTP_FROM`, `SMTP_TO`, `SMTP_SECURE`
+- `APP_URL` (ej: `https://tu-dominio.com`, para links en correos)
 
 ## Scripts utiles
 

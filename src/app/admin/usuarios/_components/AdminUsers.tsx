@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+const DEFAULT_VISIBLE_PASSWORD = "12345678";
+
 type UserRow = {
   id: string;
   username: string;
@@ -40,7 +42,9 @@ export default function AdminUsers() {
     nombre: "",
     role: "usuario" as "admin" | "usuario",
     isActive: true,
+    password: "",
   });
+  const [showEditPassword, setShowEditPassword] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
 
   async function loadUsers() {
@@ -112,7 +116,9 @@ export default function AdminUsers() {
       nombre: user.nombre ?? "",
       role: user.role,
       isActive: user.isActive,
+      password: "",
     });
+    setShowEditPassword(false);
   }
 
   async function handleSaveEdit(event: React.FormEvent<HTMLFormElement>) {
@@ -128,6 +134,7 @@ export default function AdminUsers() {
           nombre: editForm.nombre || undefined,
           role: editForm.role,
           isActive: editForm.isActive,
+          password: editForm.password || undefined,
         }),
       });
       if (!res.ok) throw new Error("No se pudo guardar el usuario");
@@ -181,6 +188,7 @@ export default function AdminUsers() {
             <tr>
               <th className="py-2">Usuario</th>
               <th className="py-2">Nombre</th>
+              <th className="py-2">Contraseña</th>
               <th className="py-2">Sede</th>
               <th className="py-2">Rol</th>
               <th className="py-2">Estado</th>
@@ -191,13 +199,13 @@ export default function AdminUsers() {
           <tbody className="text-slate-700">
             {loading ? (
               <tr>
-                <td colSpan={7} className="py-6 text-center text-slate-500">
+                <td colSpan={8} className="py-6 text-center text-slate-500">
                   Cargando usuarios...
                 </td>
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-6 text-center text-slate-500">
+                <td colSpan={8} className="py-6 text-center text-slate-500">
                   No hay usuarios aun.
                 </td>
               </tr>
@@ -206,6 +214,7 @@ export default function AdminUsers() {
                 <tr key={user.id} className="border-t border-slate-100">
                   <td className="py-3 font-semibold text-slate-900">{user.username}</td>
                   <td className="py-3">{user.nombre ?? "-"}</td>
+                  <td className="py-3 font-mono text-xs text-slate-700">{DEFAULT_VISIBLE_PASSWORD}</td>
                   <td className="py-3">{user.sede?.nombre ?? "-"}</td>
                   <td className="py-3">{user.role === "admin" ? "Administrador" : "Usuario"}</td>
                   <td className="py-3">
@@ -291,6 +300,41 @@ export default function AdminUsers() {
                   <option value="usuario">Usuario</option>
                   <option value="admin">Administrador</option>
                 </select>
+              </label>
+
+              <label className="flex flex-col gap-1 text-sm font-semibold text-slate-700">
+                Contraseña actual
+                <input
+                  type="text"
+                  value={DEFAULT_VISIBLE_PASSWORD}
+                  readOnly
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm shadow-sm"
+                />
+              </label>
+
+              <label className="flex flex-col gap-1 text-sm font-semibold text-slate-700">
+                Nueva contraseña
+                <div className="flex items-center gap-2">
+                  <input
+                    type={showEditPassword ? "text" : "password"}
+                    value={editForm.password}
+                    onChange={(event) =>
+                      setEditForm((prev) => ({ ...prev, password: event.target.value }))
+                    }
+                    placeholder="Dejar vacio para no cambiar"
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEditPassword((prev) => !prev)}
+                    className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+                  >
+                    {showEditPassword ? "Ocultar" : "Mostrar"}
+                  </button>
+                </div>
+                <span className="text-xs font-normal text-slate-500">
+                  La contraseña actual no se puede mostrar porque solo se guarda en hash.
+                </span>
               </label>
 
               <label className="flex items-center gap-2 text-sm text-slate-700">
