@@ -20,9 +20,8 @@ export async function POST(request: Request) {
   }
 
   const overrideTo = parsed.data.to;
-  if (overrideTo) {
-    process.env.SMTP_TO = overrideTo;
-  }
+  const previousTo = process.env.SMTP_TO;
+  if (overrideTo) process.env.SMTP_TO = overrideTo;
 
   const result = await sendPqrsNotification({
     caseNumber: "TEST-EMAIL",
@@ -37,6 +36,8 @@ export async function POST(request: Request) {
     descripcion: "Este es un correo de prueba para validar SMTP.",
     createdBy: user?.username ?? null,
   });
+
+  if (overrideTo) process.env.SMTP_TO = previousTo;
 
   if (!result.ok) {
     return NextResponse.json({ error: result.error ?? "Error enviando correo" }, { status: 500 });
