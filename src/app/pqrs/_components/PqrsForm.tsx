@@ -83,7 +83,7 @@ export default function PqrsForm({ userEmail }: Props) {
   const hasSingleAssignedSede = (catalogos?.sedes.length ?? 0) === 1;
   const vehiculoIndex =
     catalogos?.tipos.findIndex((tipo) =>
-      tipo.nombre.toLowerCase().includes("vehiculos de tranporte"),
+      tipo.nombre.toLowerCase().includes("vehiculos de transporte"),
     ) ?? -1;
   const rotuloIndex =
     vehiculoIndex > 0 ? vehiculoIndex - 1 : (catalogos?.tipos.length ?? 1) - 1;

@@ -10,7 +10,7 @@ async function main() {
     "Reclamo",
     "Solicitud de informacion",
     "Sugerencia",
-    "Vehiculos de tranporte",
+    "Vehiculos de transporte",
   ];
 
   const sedeRecords = await Promise.all(
