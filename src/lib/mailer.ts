@@ -116,30 +116,23 @@ ${payload.descripcion}
   `;
 
   try {
-    const failedRecipients: string[] = [];
-    for (const recipient of recipients) {
-      const info = await transport.sendMail({
-        from,
-        to: recipient,
-        subject,
-        text,
-        html,
-        attachments: payload.attachments?.map((file) => ({
-          filename: file.fileName,
-          content: file.data,
-          contentType: file.mimeType,
-        })),
-      });
+    const info = await transport.sendMail({
+      from,
+      to: recipients,
+      subject,
+      text,
+      html,
+      attachments: payload.attachments?.map((file) => ({
+        filename: file.fileName,
+        content: file.data,
+        contentType: file.mimeType,
+      })),
+    });
 
-      if (info.rejected?.length) {
-        failedRecipients.push(recipient);
-      }
-    }
-
-    if (failedRecipients.length) {
+    if (info.rejected?.length) {
       return {
         ok: false,
-        error: `Rechazado por SMTP para: ${failedRecipients.join(", ")}`,
+        error: `Rechazado por SMTP para: ${info.rejected.join(", ")}`,
       };
     }
 
