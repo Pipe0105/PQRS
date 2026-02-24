@@ -14,6 +14,15 @@ import { z } from "zod";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+function getRequestBaseUrl(request: Request) {
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const host = forwardedHost ?? request.headers.get("host");
+  if (!host) return null;
+
+  const proto = request.headers.get("x-forwarded-proto") ?? "http";
+  return `${proto}://${host}`;
+}
+
 async function ensureCatalogExists(
   sedeId: string,
   plantaId: string,
@@ -146,10 +155,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Catálogos inválidos" }, { status: 400 });
   }
 
+  const [sede, planta, tipo] = await Promise.all([
+    prisma.sede.findUnique({ where: { id: payloadWithUserSede.sedeId }, select: { nombre: true } }),
+    prisma.planta.findUnique({
+      where: { id: payloadWithUserSede.plantaId },
+      select: { nombre: true },
+    }),
+    prisma.tipoReclamo.findUnique({
+      where: { id: payloadWithUserSede.tipoReclamoId },
+      select: { nombre: true },
+    }),
+  ]);
+
+  if (!sede || !planta || !tipo) {
+    return NextResponse.json({ error: "Catálogos inválidos" }, { status: 400 });
+  }
+
   let created;
   for (let attempt = 0; attempt < 5; attempt += 1) {
     try {
-      const caseNumber = await generateCaseNumber(prisma);
+      const caseNumber = await generateCaseNumber(prisma, {
+        sedeId: payloadWithUserSede.sedeId,
+        plantaId: payloadWithUserSede.plantaId,
+        sedeNombre: sede.nombre,
+        plantaNombre: planta.nombre,
+      });
       created = await prisma.pqrs.create({
         data: {
           ...payloadWithUserSede,
@@ -183,20 +213,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No se pudo generar el número de caso" }, { status: 500 });
   }
 
-  const [sede, planta, tipo] = await Promise.all([
-    prisma.sede.findUnique({ where: { id: created.sedeId }, select: { nombre: true } }),
-    prisma.planta.findUnique({ where: { id: created.plantaId }, select: { nombre: true } }),
-    prisma.tipoReclamo.findUnique({
-      where: { id: created.tipoReclamoId },
-      select: { nombre: true },
-    }),
-  ]);
-
   const email = await sendPqrsNotification({
     caseNumber: created.caseNumber,
-    sede: sede?.nombre ?? created.sedeId,
-    planta: planta?.nombre ?? created.plantaId,
-    tipoReclamo: tipo?.nombre ?? created.tipoReclamoId,
+    sede: sede.nombre,
+    planta: planta.nombre,
+    tipoReclamo: tipo.nombre,
     fechaReciboProducto: created.fechaReciboProducto,
     nombre: created.nombre,
     numeroContacto: created.numeroContacto,
@@ -209,6 +230,7 @@ export async function POST(request: Request) {
       mimeType: file.mimeType,
       data: Buffer.from(file.buffer as unknown as Uint8Array),
     })),
+    appBaseUrl: getRequestBaseUrl(request),
   });
 
   if (!email.ok) {
@@ -268,3 +290,4 @@ export async function GET(request: Request) {
 
   return NextResponse.json({ items });
 }
+

@@ -19,6 +19,7 @@ type MailPayload = {
     mimeType: string;
     data: Buffer;
   }>;
+  appBaseUrl?: string | null;
 };
 
 type ResponsePayload = MailPayload & {
@@ -62,8 +63,11 @@ function getTransport() {
   });
 }
 
-function getCaseUrl(caseNumber: string) {
-  const baseUrl = (process.env.APP_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+function getCaseUrl(caseNumber: string, appBaseUrl?: string | null) {
+  const baseUrl = (appBaseUrl ?? process.env.APP_URL ?? "http://localhost:3000").replace(
+    /\/+$/,
+    "",
+  );
   return `${baseUrl}/pqrs/confirmacion/${encodeURIComponent(caseNumber)}`;
 }
 
@@ -81,7 +85,7 @@ export async function sendPqrsNotification(payload: MailPayload) {
   const transport = getTransport();
   const recipients = getNotificationRecipients();
   const from = process.env.SMTP_FROM ?? process.env.SMTP_USER;
-  const caseUrl = getCaseUrl(payload.caseNumber);
+  const caseUrl = getCaseUrl(payload.caseNumber, payload.appBaseUrl);
 
   if (!transport || recipients.length === 0 || !from) {
     return {
@@ -93,12 +97,13 @@ export async function sendPqrsNotification(payload: MailPayload) {
     } satisfies NotificationResult;
   }
 
-  const subject = `[PQRS] Nuevo caso ${payload.caseNumber}`;
+  const caseLabel = `Caso ${payload.caseNumber} - ${payload.planta}`;
+  const subject = `[PQRS] ${caseLabel}`;
   const fecha = new Intl.DateTimeFormat("es-CO", { dateStyle: "medium" }).format(
     payload.fechaReciboProducto,
   );
 
-  const text = `Nuevo caso PQRS ${payload.caseNumber}
+  const text = `${caseLabel}
 Sede: ${payload.sede}
 Planta: ${payload.planta}
 Tipo reclamo: ${payload.tipoReclamo}
@@ -115,7 +120,7 @@ ${payload.descripcion}
 `;
 
   const html = `
-    <h2>Nuevo caso PQRS ${payload.caseNumber}</h2>
+    <h2>${caseLabel}</h2>
     <p><strong>Sede:</strong> ${payload.sede}</p>
     <p><strong>Planta:</strong> ${payload.planta}</p>
     <p><strong>Tipo reclamo:</strong> ${payload.tipoReclamo}</p>
@@ -191,12 +196,13 @@ export async function sendPqrsResponseEmail(payload: ResponsePayload) {
     return { ok: false, error: "SMTP no configurado" };
   }
 
-  const subject = `[PQRS] Respuesta caso ${payload.caseNumber}`;
+  const caseLabel = `Caso ${payload.caseNumber} - ${payload.planta}`;
+  const subject = `[PQRS] Respuesta ${caseLabel}`;
   const fecha = new Intl.DateTimeFormat("es-CO", { dateStyle: "medium" }).format(
     payload.fechaReciboProducto,
   );
 
-  const text = `Se registro una respuesta a tu caso PQRS ${payload.caseNumber}
+  const text = `Se registro una respuesta a tu ${caseLabel}
 Estado: ${payload.estado}
 Sede: ${payload.sede}
 Planta: ${payload.planta}
@@ -208,7 +214,7 @@ ${payload.respuesta}
 `;
 
   const html = `
-    <h2>Respuesta a tu caso PQRS ${payload.caseNumber}</h2>
+    <h2>Respuesta a tu ${caseLabel}</h2>
     <p><strong>Estado:</strong> ${payload.estado}</p>
     <p><strong>Sede:</strong> ${payload.sede}</p>
     <p><strong>Planta:</strong> ${payload.planta}</p>
