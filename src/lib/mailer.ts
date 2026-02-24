@@ -31,6 +31,15 @@ type ResponsePayload = MailPayload & {
   }>;
 };
 
+type NotificationResult = {
+  ok: boolean;
+  error?: string;
+  attempted: string[];
+  accepted: string[];
+  failed: string[];
+  failures?: string[];
+};
+
 function getTransport() {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT ?? 0);
@@ -75,7 +84,13 @@ export async function sendPqrsNotification(payload: MailPayload) {
   const caseUrl = getCaseUrl(payload.caseNumber);
 
   if (!transport || recipients.length === 0 || !from) {
-    return { ok: false, error: "SMTP no configurado" };
+    return {
+      ok: false,
+      error: "SMTP no configurado",
+      attempted: recipients,
+      accepted: [],
+      failed: recipients,
+    } satisfies NotificationResult;
   }
 
   const subject = `[PQRS] Nuevo caso ${payload.caseNumber}`;
@@ -115,32 +130,57 @@ ${payload.descripcion}
     <pre style="white-space: pre-wrap; font-family: inherit;">${payload.descripcion}</pre>
   `;
 
-  try {
-    const info = await transport.sendMail({
-      from,
-      to: recipients,
-      subject,
-      text,
-      html,
-      attachments: payload.attachments?.map((file) => ({
-        filename: file.fileName,
-        content: file.data,
-        contentType: file.mimeType,
-      })),
-    });
+  const attachments = payload.attachments?.map((file) => ({
+    filename: file.fileName,
+    content: file.data,
+    contentType: file.mimeType,
+  }));
 
-    if (info.rejected?.length) {
-      return {
-        ok: false,
-        error: `Rechazado por SMTP para: ${info.rejected.join(", ")}`,
-      };
+  const acceptedRecipients: string[] = [];
+  const failedRecipients: string[] = [];
+  const failures: string[] = [];
+
+  for (const recipient of recipients) {
+    try {
+      const info = await transport.sendMail({
+        from,
+        to: recipient,
+        subject,
+        text,
+        html,
+        attachments,
+      });
+
+      if (info.rejected?.length) {
+        failedRecipients.push(recipient);
+        failures.push(`${recipient}: rechazado por SMTP (${info.rejected.join(", ")})`);
+      } else {
+        acceptedRecipients.push(recipient);
+      }
+    } catch (error) {
+      failedRecipients.push(recipient);
+      const message = error instanceof Error ? error.message : "Error enviando correo";
+      failures.push(`${recipient}: ${message}`);
     }
-
-    return { ok: true };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Error enviando correo";
-    return { ok: false, error: message };
   }
+
+  if (failedRecipients.length > 0) {
+    return {
+      ok: false,
+      error: `No se pudo enviar a: ${failedRecipients.join(", ")}`,
+      attempted: recipients,
+      accepted: acceptedRecipients,
+      failed: failedRecipients,
+      failures,
+    };
+  }
+
+  return {
+    ok: true,
+    attempted: recipients,
+    accepted: acceptedRecipients,
+    failed: [],
+  };
 }
 
 export async function sendPqrsResponseEmail(payload: ResponsePayload) {

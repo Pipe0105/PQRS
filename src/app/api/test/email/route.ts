@@ -40,8 +40,23 @@ export async function POST(request: Request) {
   if (overrideTo) process.env.SMTP_TO = previousTo;
 
   if (!result.ok) {
-    return NextResponse.json({ error: result.error ?? "Error enviando correo" }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: result.error ?? "Error enviando correo",
+        attempted: result.attempted,
+        accepted: result.accepted,
+        failed: result.failed,
+        failures: result.failures ?? [],
+      },
+      { status: 500 },
+    );
   }
 
-  return NextResponse.json({ ok: true, message: "Correo enviado" });
+  return NextResponse.json({
+    ok: true,
+    message: "Correo enviado",
+    attempted: result.attempted,
+    accepted: result.accepted,
+    failed: result.failed,
+  });
 }
