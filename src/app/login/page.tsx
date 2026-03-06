@@ -32,6 +32,9 @@ export default async function LoginPage() {
           </p>
         </div>
         <LoginForm />
+        <p className="mt-2 border-t border-slate-200 pt-4 text-center text-[11px] text-slate-500 sm:text-xs">
+          Created by Juan Felipe Gomez and Juan Manuel Velasquez
+        </p>
       </div>
     </div>
   );
