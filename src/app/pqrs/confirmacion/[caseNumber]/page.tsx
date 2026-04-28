@@ -2,10 +2,13 @@ import Link from "next/link";
 
 export default async function ConfirmacionPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ caseNumber: string }>;
+  searchParams: Promise<{ email?: string }>;
 }) {
   const { caseNumber } = await params;
+  const { email } = await searchParams;
 
   return (
     <div className="min-h-screen px-4 py-16">
@@ -22,6 +25,12 @@ export default async function ConfirmacionPage({
         <div className="rounded-2xl border border-blue-200 bg-blue-50 px-6 py-4 text-2xl font-bold text-blue-700">
           {caseNumber}
         </div>
+        {email === "failed" ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            La solicitud quedo registrada, pero la notificacion por correo interno fallo. El
+            equipo administrador puede reintentar el envio desde el detalle del caso.
+          </div>
+        ) : null}
         <Link
           href="/pqrs"
           className="inline-flex w-fit items-center justify-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-300/60 transition hover:bg-blue-700"

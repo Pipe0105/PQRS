@@ -8,20 +8,14 @@ import {
 } from "@/lib/validators/pqrs";
 import { Prisma } from "@prisma/client";
 import { requireApiAdmin, requireApiUser } from "@/lib/api-auth";
-import { sendPqrsNotification } from "@/lib/mailer";
+import {
+  getRequestBaseUrl,
+  sendPqrsCreationNotificationEmail,
+} from "@/lib/pqrs-notification-email";
 import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-
-function getRequestBaseUrl(request: Request) {
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const host = forwardedHost ?? request.headers.get("host");
-  if (!host) return null;
-
-  const proto = request.headers.get("x-forwarded-proto") ?? "http";
-  return `${proto}://${host}`;
-}
 
 async function ensureCatalogExists(
   sedeId: string,
@@ -213,23 +207,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No se pudo generar el número de caso" }, { status: 500 });
   }
 
-  const email = await sendPqrsNotification({
-    caseNumber: created.caseNumber,
-    sede: sede.nombre,
-    planta: planta.nombre,
-    tipoReclamo: tipo.nombre,
-    fechaReciboProducto: created.fechaReciboProducto,
-    nombre: created.nombre,
-    numeroContacto: created.numeroContacto,
-    correo: created.correo,
-    lote: created.lote,
-    descripcion: created.descripcion,
-    createdBy: user?.username ?? null,
-    attachments: validatedFiles.map((file) => ({
-      fileName: file.name,
-      mimeType: file.mimeType,
-      data: Buffer.from(file.buffer as unknown as Uint8Array),
-    })),
+  const email = await sendPqrsCreationNotificationEmail({
+    pqrsId: created.id,
     appBaseUrl: getRequestBaseUrl(request),
   });
 

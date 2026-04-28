@@ -217,8 +217,15 @@ export default function PqrsForm({ userEmail }: Props) {
         throw new Error(data?.error ?? "No se pudo enviar la solicitud.");
       }
 
-      const data = (await res.json()) as { caseNumber: string };
-      router.push(`/pqrs/confirmacion/${data.caseNumber}`);
+      const data = (await res.json()) as {
+        caseNumber: string;
+        email: "sent" | "failed";
+      };
+      const confirmationUrl =
+        data.email === "failed"
+          ? `/pqrs/confirmacion/${data.caseNumber}?email=failed`
+          : `/pqrs/confirmacion/${data.caseNumber}`;
+      router.push(confirmationUrl);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Error al enviar");
     } finally {

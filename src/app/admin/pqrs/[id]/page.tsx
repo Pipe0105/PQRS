@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import AdminPqrsRespuestaForm from "./_components/AdminPqrsRespuestaForm";
+import AdminPqrsNotificationEmailCard from "./_components/AdminPqrsNotificationEmailCard";
 
 export default async function AdminPqrsDetailPage({
   params,
@@ -13,7 +14,21 @@ export default async function AdminPqrsDetailPage({
   const { id } = await params;
   const item = await prisma.pqrs.findUnique({
     where: { id },
-    include: {
+    select: {
+      id: true,
+      caseNumber: true,
+      estado: true,
+      fechaReciboProducto: true,
+      nombre: true,
+      numeroContacto: true,
+      correo: true,
+      lote: true,
+      descripcion: true,
+      createdAt: true,
+      notificationEmailStatus: true,
+      notificationEmailError: true,
+      notificationEmailAttemptedAt: true,
+      notificationEmailSentAt: true,
       sede: true,
       planta: true,
       tipoReclamo: true,
@@ -159,6 +174,14 @@ export default async function AdminPqrsDetailPage({
             )}
           </div>
         </section>
+
+        <AdminPqrsNotificationEmailCard
+          pqrsId={item.id}
+          status={item.notificationEmailStatus}
+          error={item.notificationEmailError}
+          attemptedAt={item.notificationEmailAttemptedAt?.toISOString() ?? null}
+          sentAt={item.notificationEmailSentAt?.toISOString() ?? null}
+        />
 
         <section className="rounded-3xl bg-white/95 p-6 shadow-xl shadow-blue-200/40">
           <h2 className="text-lg font-semibold text-slate-900">Respuesta y seguimiento</h2>

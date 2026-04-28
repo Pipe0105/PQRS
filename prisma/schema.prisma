@@ -18,6 +18,12 @@ enum UserRole {
   usuario
 }
 
+enum PqrsNotificationEmailStatus {
+  pending
+  sent
+  failed
+}
+
 model Sede {
   id        String   @id @default(cuid())
   nombre    String   @unique
@@ -65,6 +71,10 @@ model Pqrs {
   lote                String?
   descripcion         String
   estado              PqrsEstado  @default(abierto)
+  notificationEmailStatus      PqrsNotificationEmailStatus @default(pending)
+  notificationEmailError       String?
+  notificationEmailAttemptedAt DateTime?
+  notificationEmailSentAt      DateTime?
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
 
@@ -80,6 +90,7 @@ model Pqrs {
   @@index([tipoReclamoId])
   @@index([createdById])
   @@index([estado])
+  @@index([notificationEmailStatus])
   @@index([createdAt])
 }
 

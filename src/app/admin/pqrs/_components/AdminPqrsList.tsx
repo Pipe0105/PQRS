@@ -18,6 +18,7 @@ type PqrsItem = {
   id: string;
   caseNumber: string;
   estado: "abierto" | "en_proceso" | "cerrado";
+  notificationEmailStatus: "pending" | "sent" | "failed";
   createdAt: string;
   sede: CatalogoItem;
   planta: CatalogoItem;
@@ -38,6 +39,18 @@ const estadoLabels: Record<PqrsItem["estado"], string> = {
   abierto: "Abierto",
   en_proceso: "En proceso",
   cerrado: "Cerrado",
+};
+
+const emailStatusLabels: Record<PqrsItem["notificationEmailStatus"], string> = {
+  pending: "Pendiente",
+  sent: "Enviado",
+  failed: "Fallido",
+};
+
+const emailStatusStyles: Record<PqrsItem["notificationEmailStatus"], string> = {
+  pending: "bg-amber-50 text-amber-700",
+  sent: "bg-emerald-50 text-emerald-700",
+  failed: "bg-red-50 text-red-700",
 };
 
 export default function AdminPqrsList({ initialFilters }: Props) {
@@ -181,6 +194,7 @@ export default function AdminPqrsList({ initialFilters }: Props) {
               <th className="py-2">Planta</th>
               <th className="py-2">Tipo</th>
               <th className="py-2">Estado</th>
+              <th className="py-2">Correo</th>
               <th className="py-2">Fecha</th>
               <th className="py-2"></th>
             </tr>
@@ -188,13 +202,13 @@ export default function AdminPqrsList({ initialFilters }: Props) {
           <tbody className="text-slate-700">
             {loading ? (
               <tr>
-                <td colSpan={7} className="py-6 text-center text-slate-500">
+                <td colSpan={8} className="py-6 text-center text-slate-500">
                   Cargando solicitudes...
                 </td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-6 text-center text-slate-500">
+                <td colSpan={8} className="py-6 text-center text-slate-500">
                   No hay solicitudes con estos filtros.
                 </td>
               </tr>
@@ -208,6 +222,13 @@ export default function AdminPqrsList({ initialFilters }: Props) {
                   <td className="py-3">
                     <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
                       {estadoLabels[item.estado]}
+                    </span>
+                  </td>
+                  <td className="py-3">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${emailStatusStyles[item.notificationEmailStatus]}`}
+                    >
+                      {emailStatusLabels[item.notificationEmailStatus]}
                     </span>
                   </td>
                   <td className="py-3">
