@@ -22,6 +22,8 @@ npm install
 npm run prisma:generate
 ```
 
+`npm run build` ahora ejecuta `prisma generate` automaticamente antes de compilar, para evitar desfaces entre `schema.prisma` y `@prisma/client` en despliegues.
+
 3) Migraciones y seed:
 
 ```bash
